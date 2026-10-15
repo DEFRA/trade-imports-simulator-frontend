@@ -1,0 +1,16 @@
+@use "variables" as *;
+
+.app-card {
+  background: $app-panel-background;
+  border: 1px solid $app-panel-border;
+  border-radius: 6px;
+  padding: 16px;
+  margin-bottom: 16px;
+}
+
+.app-card__title {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}

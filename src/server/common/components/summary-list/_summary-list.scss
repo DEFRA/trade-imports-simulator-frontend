@@ -1,0 +1,20 @@
+@use "variables" as *;
+
+.app-summary-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 8px 24px;
+}
+
+.app-summary-list__key {
+  margin-bottom: 2px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: $app-secondary-text;
+}
+
+.app-summary-list__value {
+  overflow-wrap: anywhere;
+}

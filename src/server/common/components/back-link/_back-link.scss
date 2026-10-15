@@ -1,0 +1,11 @@
+@use "variables" as *;
+
+.app-back-link {
+  display: inline-block;
+  margin-bottom: 12px;
+  font-size: 13px;
+
+  &::before {
+    content: "← ";
+  }
+}

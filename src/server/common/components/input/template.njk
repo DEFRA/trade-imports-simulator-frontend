@@ -1,0 +1,27 @@
+{#- Same params as govukInput. -#}
+{% from "macros/attributes.njk" import appAttributes %}
+{% set id = params.id or params.name %}
+{% set describedBy = params.describedBy or "" %}
+<div class="app-field {{- ' app-field--error' if params.errorMessage }} {{- ' ' ~ params.formGroup.classes if params.formGroup.classes }}">
+  {% if params.label %}
+  <label class="app-field__label {{- ' ' ~ params.label.classes if params.label.classes }}" for="{{ id }}">
+    {{- params.label.html | safe if params.label.html else params.label.text -}}
+  </label>
+  {% endif %}
+  {% if params.hint %}
+  {% set describedBy = describedBy ~ " " ~ id ~ "-hint" %}
+  <div id="{{ id }}-hint" class="app-field__hint">{{ params.hint.html | safe if params.hint.html else params.hint.text }}</div>
+  {% endif %}
+  {% if params.errorMessage %}
+  {% set describedBy = describedBy ~ " " ~ id ~ "-error" %}
+  <p id="{{ id }}-error" class="app-field__error">{{ params.errorMessage.html | safe if params.errorMessage.html else params.errorMessage.text }}</p>
+  {% endif %}
+  <input class="app-input {{- ' app-input--error' if params.errorMessage }} {{- ' ' ~ params.classes if params.classes }}" id="{{ id }}" name="{{ params.name }}" type="{{ params.type | default('text') }}"
+    {%- if params.value is defined and params.value !== null %} value="{{ params.value }}"{% endif %}
+    {%- if describedBy | trim %} aria-describedby="{{ describedBy | trim }}"{% endif %}
+    {%- if params.inputmode %} inputmode="{{ params.inputmode }}"{% endif %}
+    {%- if params.autocomplete %} autocomplete="{{ params.autocomplete }}"{% endif %}
+    {%- if params.spellcheck === false %} spellcheck="false"{% endif %}
+    {%- if params.disabled %} disabled{% endif %}
+    {{- appAttributes(params.attributes) }}>
+</div>

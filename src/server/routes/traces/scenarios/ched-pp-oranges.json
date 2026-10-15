@@ -1,0 +1,51 @@
+{
+  "exchangedDocument": {
+    "includedNote": {
+      "CHED_TYPE": "PP"
+    },
+    "declaration": {
+      "includedClause": {
+        "PURPOSE": "FREE_CIRCULATION"
+      }
+    }
+  },
+  "specifiedConsignment": {
+    "exportCountry": "ZA",
+    "importCountry": "XI",
+    "consignorParty": {
+      "identifier": "770198",
+      "postalAddress": {
+        "countryId": "XI"
+      }
+    },
+    "consigneeParty": {
+      "identifier": "899361",
+      "postalAddress": {
+        "countryId": "XI"
+      }
+    },
+    "unloadingBaseportLocation": {
+      "identifier": "GBBEL",
+      "countryId": "XI"
+    },
+    "includedConsignmentItem": {
+      "natureIdCargo": "12",
+      "includedTradeLineItem": [
+        {
+          "applicableClassification": {
+            "CN": "08051022"
+          },
+          "originCountry": "ZA",
+          "netWeight": {
+            "value": 5000,
+            "unitCode": "KGM"
+          },
+          "physicalReferencedLogisticsPackage": {
+            "typeCode": "BX",
+            "itemQuantity": 200
+          }
+        }
+      ]
+    }
+  }
+}

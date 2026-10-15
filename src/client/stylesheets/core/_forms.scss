@@ -1,0 +1,47 @@
+@use "variables" as *;
+
+// The wrapper every form control sits in: govuk-form-group's job, in the POC's compact style.
+.app-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.app-field__label {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: $app-secondary-text;
+}
+
+.app-field__hint {
+  font-size: 12px;
+  color: $app-muted-text;
+}
+
+.app-field__error {
+  font-size: 12px;
+  font-weight: 600;
+  color: $app-red;
+}
+
+// Fields flow into as many columns as fit, like the POC's meta-grid.
+.app-fields {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 12px 16px;
+}
+
+p + .app-fields {
+  margin-top: 12px;
+}
+
+.app-button-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-top: 12px;
+}

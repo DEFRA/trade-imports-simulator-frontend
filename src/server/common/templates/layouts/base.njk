@@ -1,0 +1,40 @@
+{#-
+  Our replacement for govuk/template.njk. It keeps the same block names (pageTitle, head, headIcons,
+  bodyStart, skipLink, header, container, beforeContent, main, content, footer, bodyEnd) and page
+  variables (htmlClasses, bodyClasses, mainClasses, containerClasses), so a page written for one
+  fits the other.
+-#}
+<!DOCTYPE html>
+<html lang="{{ htmlLang | default('en', true) }}" class="app-template {{- ' ' ~ htmlClasses if htmlClasses }}">
+  <head>
+    <meta charset="utf-8">
+    <title>{% block pageTitle %}{% endblock %}</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    {% block head %}{% endblock %}
+    {% block headIcons %}{% endblock %}
+  </head>
+  <body class="app-template__body {{- ' ' ~ bodyClasses if bodyClasses }}">
+    {% block bodyStart %}{% endblock %}
+
+    {% block skipLink %}
+      <a href="#main-content" class="app-skip-link">Skip to main content</a>
+    {% endblock %}
+
+    {% block header %}{% endblock %}
+
+    {% block container %}
+      <div class="app-width-container {{- ' ' ~ containerClasses if containerClasses }}">
+        {% block beforeContent %}{% endblock %}
+        {% block main %}
+          <main class="app-main-wrapper {{- ' ' ~ mainClasses if mainClasses }}" id="main-content">
+            {% block content %}{% endblock %}
+          </main>
+        {% endblock %}
+      </div>
+    {% endblock %}
+
+    {% block footer %}{% endblock %}
+
+    {% block bodyEnd %}{% endblock %}
+  </body>
+</html>

@@ -1,0 +1,34 @@
+{#- Same params as govukTable. -#}
+{% from "macros/attributes.njk" import appAttributes %}
+{% macro cellContent(cell) %}{{ cell.html | safe if cell.html else cell.text }}{% endmacro %}
+<table class="app-table {{- ' ' ~ params.classes if params.classes }}" {{- appAttributes(params.attributes) }}>
+  {% if params.caption %}
+  <caption class="app-table__caption {{- ' ' ~ params.captionClasses if params.captionClasses }}">{{ params.caption }}</caption>
+  {% endif %}
+  {% if params.head %}
+  <thead>
+    <tr>
+      {% for cell in params.head %}
+      <th scope="col" class="{{ 'app-table__cell--numeric' if cell.format == 'numeric' }} {{- ' ' ~ cell.classes if cell.classes }}"
+        {%- if cell.colspan %} colspan="{{ cell.colspan }}"{% endif %}>{{ cellContent(cell) }}</th>
+      {% endfor %}
+    </tr>
+  </thead>
+  {% endif %}
+  <tbody>
+    {% for row in params.rows %}
+    {% if row %}
+    <tr>
+      {% for cell in row %}
+      {% set classes = ('app-table__cell--numeric' if cell.format == 'numeric') ~ (' ' ~ cell.classes if cell.classes) %}
+      {% if loop.first and params.firstCellIsHeader %}
+      <th scope="row" {%- if classes | trim %} class="{{ classes | trim }}"{% endif %}>{{ cellContent(cell) }}</th>
+      {% else %}
+      <td {%- if classes | trim %} class="{{ classes | trim }}"{% endif %} {%- if cell.colspan %} colspan="{{ cell.colspan }}"{% endif %}>{{ cellContent(cell) }}</td>
+      {% endif %}
+      {% endfor %}
+    </tr>
+    {% endif %}
+    {% endfor %}
+  </tbody>
+</table>

@@ -1,39 +1,15 @@
 import { buildNavigation } from './build-navigation.js'
 
-function mockRequest(options) {
-  return { ...options }
-}
-
 describe('#buildNavigation', () => {
-  test('Should provide expected navigation details', () => {
-    expect(
-      buildNavigation(mockRequest({ path: '/non-existent-path' }))
-    ).toEqual([
-      {
-        current: false,
-        text: 'Home',
-        href: '/'
-      },
-      {
-        current: false,
-        text: 'About',
-        href: '/about'
-      }
+  test('Should list every simulator, linking only those that are built', () => {
+    expect(buildNavigation({ path: '/' })).toEqual([
+      { text: 'TRACES', href: '/traces', current: false },
+      { text: 'IPAFFS' },
+      { text: 'CDS' }
     ])
   })
 
-  test('Should provide expected highlighted navigation details', () => {
-    expect(buildNavigation(mockRequest({ path: '/' }))).toEqual([
-      {
-        current: true,
-        text: 'Home',
-        href: '/'
-      },
-      {
-        current: false,
-        text: 'About',
-        href: '/about'
-      }
-    ])
+  test('Should mark TRACES current on its pages', () => {
+    expect(buildNavigation({ path: '/traces' })[0].current).toBe(true)
   })
 })

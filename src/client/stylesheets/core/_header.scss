@@ -1,7 +1,66 @@
-@use "variables/colours" as *;
-
-// Example namespaced custom element style CSS classes
+@use "variables" as *;
 
 .app-header {
-  border-bottom-color: $app-light-grey;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px 24px;
+  padding: 10px $app-gutter;
+  background: $app-dark-blue;
+  color: #ffffff;
+}
+
+.app-header__title {
+  color: #ffffff;
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.app-header__nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  list-style: none;
+}
+
+.app-header__link {
+  display: block;
+  padding: 4px 10px;
+  border-radius: 4px;
+  color: #d2e2f1;
+
+  &:hover {
+    background: rgb(255, 255, 255, 0.12);
+    color: #ffffff;
+    text-decoration: none;
+  }
+
+  &[aria-current="page"] {
+    background: #ffffff;
+    color: $app-dark-blue;
+  }
+}
+
+.app-header__link--disabled {
+  color: #7f97bb;
+  cursor: default;
+
+  &:hover {
+    background: none;
+    color: #7f97bb;
+  }
+}
+
+.app-skip-link {
+  position: absolute;
+  left: -9999px;
+
+  &:focus {
+    left: 8px;
+    top: 8px;
+    z-index: 1;
+    padding: 4px 8px;
+    background: $app-focus;
+    color: $app-text;
+  }
 }

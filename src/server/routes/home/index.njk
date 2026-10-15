@@ -3,15 +3,29 @@
 {% block content %}
   {{ appHeading({
     text: heading,
-    caption: "trade-imports-simulator-frontend"
+    caption: "Stand-ins for the upstream systems that feed BTMS, for testing and demos."
   }) }}
 
-  <div class="govuk-grid-row">
-    <div class="govuk-grid-column-two-thirds">
-      <div class="govuk-body" data-testid="app-page-body">
-        <p></p>
-      </div>
-    </div>
-  </div>
-
+  {% call appCard({ classes: "app-simulator-list" }) %}
+    {{ appTable({
+      head: [{ text: "System" }, { text: "What it does" }, { text: "Status" }],
+      rows: [
+        [
+          { html: '<a href="/traces">TRACES</a>' },
+          { text: "Create, update, accept and reject CHEDs in the TRACES NT simulator." },
+          { html: appTag({ text: "In progress", classes: "app-tag--yellow" }) }
+        ],
+        [
+          { text: "IPAFFS" },
+          { text: "Not built yet." },
+          { html: appTag({ text: "Planned", classes: "app-tag--grey" }) }
+        ],
+        [
+          { text: "CDS" },
+          { text: "Not built yet." },
+          { html: appTag({ text: "Planned", classes: "app-tag--grey" }) }
+        ]
+      ]
+    }) }}
+  {% endcall %}
 {% endblock %}

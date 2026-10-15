@@ -1,0 +1,47 @@
+{% extends 'layouts/page.njk' %}
+
+{% from "partials/traces/status-tag.njk" import statusTag %}
+
+{% block content %}
+  {{ appBackLink({ href: "/traces/cheds/" ~ ched.id, text: ched.id }) }}
+  <div class="app-title-row">
+    {{ appHeading({ text: "Record a decision" }) }}
+    <span class="app-mono">{{ ched.id }}</span>
+    {{ statusTag(ched.status) }}
+  </div>
+
+  <div id="decision-error" hidden>
+    {{ appErrorSummary({
+      titleText: "The simulator refused the decision",
+      descriptionHtml: '<span data-decision-error-detail></span>'
+    }) }}
+  </div>
+
+  {# Each form posts its decision, then returns to the CHED, which shows the new status. #}
+  <div class="app-columns">
+    {% call appCard({ title: { text: "Accept" } }) %}
+      <form method="post" novalidate data-module="app-decision-form"
+        data-action="/traces/api/cheds/{{ ched.id }}/decision" data-done="/traces/cheds/{{ ched.id }}" data-error="decision-error">
+        <input type="hidden" name="decision" value="accept">
+        <p>Sets the status to VALIDATED, with every check satisfactory and the consignment acceptable for free circulation.</p>
+        <div class="app-button-row">
+          {{ appButton({ text: "Accept" }) }}
+        </div>
+      </form>
+    {% endcall %}
+
+    {% call appCard({ title: { text: "Reject" } }) %}
+      <form method="post" novalidate data-module="app-decision-form"
+        data-action="/traces/api/cheds/{{ ched.id }}/decision" data-done="/traces/cheds/{{ ched.id }}" data-error="decision-error">
+        <input type="hidden" name="decision" value="reject">
+        <p>Sets the status to REJECTED, with the checks not satisfactory and the consignment not acceptable.</p>
+        <div class="app-fields">
+          {{ appSelect({ name: "refusalReason", label: { text: "Refusal reason" }, items: items.refusalReasons }) }}
+        </div>
+        <div class="app-button-row">
+          {{ appButton({ text: "Reject", classes: "app-button--warning" }) }}
+        </div>
+      </form>
+    {% endcall %}
+  </div>
+{% endblock %}

@@ -1,0 +1,16 @@
+{#- Same params as govukSummaryList (rows of key and value), laid out as the POC's meta-grid. -#}
+{% from "macros/attributes.njk" import appAttributes %}
+<dl class="app-summary-list {{- ' ' ~ params.classes if params.classes }}" {{- appAttributes(params.attributes) }}>
+  {% for row in params.rows %}
+  {% if row %}
+  <div class="app-summary-list__row {{- ' ' ~ row.classes if row.classes }}">
+    <dt class="app-summary-list__key">{{ row.key.html | safe if row.key.html else row.key.text }}</dt>
+    <dd class="app-summary-list__value">
+      {%- if row.value.html %}{{ row.value.html | safe }}
+      {%- elif row.value.text %}{{ row.value.text }}
+      {%- else %}<span class="app-empty">none</span>{% endif -%}
+    </dd>
+  </div>
+  {% endif %}
+  {% endfor %}
+</dl>

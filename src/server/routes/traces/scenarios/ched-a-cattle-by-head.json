@@ -1,0 +1,48 @@
+{
+  "exchangedDocument": {
+    "includedNote": {
+      "CHED_TYPE": "A"
+    },
+    "declaration": {
+      "includedClause": {
+        "PURPOSE": "FREE_CIRCULATION",
+        "GOODS_CERTIFIED_AS": "SLAUGHTER"
+      }
+    }
+  },
+  "specifiedConsignment": {
+    "exportCountry": "FR",
+    "importCountry": "XI",
+    "consignorParty": {
+      "identifier": "770198",
+      "postalAddress": {
+        "countryId": "XI"
+      }
+    },
+    "consigneeParty": {
+      "identifier": "899361",
+      "postalAddress": {
+        "countryId": "XI"
+      }
+    },
+    "unloadingBaseportLocation": {
+      "identifier": "GBLAR",
+      "countryId": "XI"
+    },
+    "includedConsignmentItem": {
+      "natureIdCargo": "12",
+      "includedTradeLineItem": [
+        {
+          "applicableClassification": {
+            "CN": "0102"
+          },
+          "originCountry": "FR",
+          "netVolume": {
+            "value": 3,
+            "unitCode": "H87"
+          }
+        }
+      ]
+    }
+  }
+}

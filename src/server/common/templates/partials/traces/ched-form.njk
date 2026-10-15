@@ -1,0 +1,84 @@
+{#-
+  The CHED form, shared by the create and edit pages. The ched-form client module fills it from a
+  control model and builds the request. Expects `items` (select options) and `chedForm`:
+  { id, submitText, and either model (the edit page) or starts and startPicker (the create page) }.
+  Without a model the fields stay disabled until a start is chosen. Submitting sends the model as
+  JSON to `action` (by `method`, POST unless set) and shows the response in the `result` element.
+-#}
+<form id="{{ chedForm.id }}" method="post" novalidate data-module="app-ched-form"
+  {%- if chedForm.model %} data-model="{{ chedForm.model }}"{% endif %}
+  {%- if chedForm.starts %} data-starts="{{ chedForm.starts }}"{% endif %}
+  {%- if chedForm.startPicker %} data-start-picker="{{ chedForm.startPicker }}"{% endif %}
+  {%- if chedForm.action %} data-action="{{ chedForm.action }}"{% endif %}
+  {%- if chedForm.method %} data-method="{{ chedForm.method }}"{% endif %}
+  {%- if chedForm.result %} data-result="{{ chedForm.result }}"{% endif %}>
+
+  <div data-ched-form-error hidden>
+    {{ appErrorSummary({
+      titleText: "The simulator refused it",
+      descriptionHtml: '<span data-ched-form-error-detail></span>'
+    }) }}
+  </div>
+
+  {% if not chedForm.model %}
+  <p class="app-form-prompt" data-ched-form-prompt>Choose a starting point above to fill in the form.</p>
+  {% endif %}
+  <fieldset class="app-form-body" data-ched-form-body {%- if not chedForm.model %} disabled{% endif %}>
+  <legend class="app-visually-hidden">CHED details</legend>
+
+  <h3>Declaration</h3>
+  <div class="app-fields">
+    {{ appSelect({ name: "purpose", label: { text: "Purpose" }, items: items.purposes }) }}
+    {{ appSelect({ name: "goodsCertifiedAs", label: { text: "Goods certified as" }, items: items.goodsCertifiedAs }) }}
+  </div>
+
+  <h3>Consignment</h3>
+  <div class="app-fields">
+    {{ appSelect({ name: "bcp", label: { text: "Border control post" }, items: items.borderControlPosts }) }}
+    {{ appSelect({ name: "consignor", label: { text: "Consignor" }, items: items.operators }) }}
+    {{ appSelect({ name: "consignee", label: { text: "Consignee" }, items: items.operators }) }}
+    {{ appSelect({ name: "exportCountry", label: { text: "Export country" }, items: items.countries }) }}
+    {{ appSelect({ name: "importCountry", label: { text: "Import country" }, items: items.countries }) }}
+  </div>
+
+  <h3>Commodities</h3>
+  <table class="app-table app-lines">
+    <thead>
+      <tr>
+        <th scope="col">CN code</th>
+        <th scope="col">Origin</th>
+        <th scope="col">Net weight (kg)</th>
+        <th scope="col">Head</th>
+        <th scope="col">Packages</th>
+        <th scope="col">Package type</th>
+        <th scope="col"><span class="app-visually-hidden">Actions</span></th>
+      </tr>
+    </thead>
+    <tbody data-ched-form-lines></tbody>
+  </table>
+  <template data-ched-form-line>
+    <tr>
+      <td>{{ appSelect({ id: "line-__INDEX__-cnCode", name: "cnCode", label: { text: "CN code", classes: "app-visually-hidden" }, items: items.cnCodes, attributes: { "data-line-field": "cnCode" } }) }}</td>
+      <td>{{ appSelect({ id: "line-__INDEX__-originCountry", name: "originCountry", label: { text: "Origin", classes: "app-visually-hidden" }, items: items.countries, attributes: { "data-line-field": "originCountry" } }) }}</td>
+      <td>{{ appInput({ id: "line-__INDEX__-netWeight", name: "netWeight", inputmode: "decimal", label: { text: "Net weight (kg)", classes: "app-visually-hidden" }, attributes: { "data-line-field": "netWeight" } }) }}</td>
+      <td>{{ appInput({ id: "line-__INDEX__-pieces", name: "pieces", inputmode: "numeric", label: { text: "Head", classes: "app-visually-hidden" }, attributes: { "data-line-field": "pieces" } }) }}</td>
+      <td>{{ appInput({ id: "line-__INDEX__-packages", name: "packages", inputmode: "numeric", label: { text: "Packages", classes: "app-visually-hidden" }, attributes: { "data-line-field": "packages" } }) }}</td>
+      <td>{{ appInput({ id: "line-__INDEX__-packageType", name: "packageType", label: { text: "Package type", classes: "app-visually-hidden" }, attributes: { "data-line-field": "packageType" }, classes: "app-input--short" }) }}</td>
+      <td>{{ appButton({ text: "Remove", type: "button", classes: "app-button--link", attributes: { "data-ched-form-remove": "" } }) }}</td>
+    </tr>
+  </template>
+
+  <div class="app-button-row">
+    {{ appButton({ text: "Add line", type: "button", classes: "app-button--secondary", attributes: { "data-ched-form-add": "" } }) }}
+  </div>
+
+  <details class="app-json">
+    <summary>Request</summary>
+    <pre data-ched-form-request></pre>
+  </details>
+
+  <div class="app-button-row">
+    {{ appButton({ text: chedForm.submitText, attributes: { "data-ched-form-submit": "" } }) }}
+  </div>
+  </fieldset>
+</form>

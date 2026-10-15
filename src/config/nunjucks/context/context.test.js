@@ -62,18 +62,16 @@ describe('context and cache', () => {
           getAssetPath: expect.any(Function),
           navigation: [
             {
-              current: true,
-              text: 'Home',
-              href: '/'
-            },
-            {
               current: false,
-              text: 'About',
-              href: '/about'
-            }
+              text: 'TRACES',
+              href: '/traces'
+            },
+            { text: 'IPAFFS' },
+            { text: 'CDS' }
           ],
           serviceName: 'trade-imports-simulator-frontend',
-          serviceUrl: '/'
+          serviceUrl: '/',
+          btmsPortalUrl: 'http://localhost:3000'
         })
       })
 
@@ -151,18 +149,16 @@ describe('context and cache', () => {
           getAssetPath: expect.any(Function),
           navigation: [
             {
-              current: true,
-              text: 'Home',
-              href: '/'
-            },
-            {
               current: false,
-              text: 'About',
-              href: '/about'
-            }
+              text: 'TRACES',
+              href: '/traces'
+            },
+            { text: 'IPAFFS' },
+            { text: 'CDS' }
           ],
           serviceName: 'trade-imports-simulator-frontend',
-          serviceUrl: '/'
+          serviceUrl: '/',
+          btmsPortalUrl: 'http://localhost:3000'
         })
       })
     })

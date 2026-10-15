@@ -1,0 +1,18 @@
+@use "variables" as *;
+
+.app-select {
+  width: 100%;
+  padding: 5px 8px;
+  border: 1px solid $app-input-border;
+  border-radius: 4px;
+  background: #ffffff;
+  color: $app-text;
+  font-family: $app-mono-font;
+  font-size: 13px;
+
+  &:focus {
+    outline: 3px solid $app-focus;
+    outline-offset: 0;
+    border-color: $app-text;
+  }
+}
