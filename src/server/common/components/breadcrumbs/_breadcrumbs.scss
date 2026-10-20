@@ -1,0 +1,22 @@
+@use 'variables' as *;
+
+.app-breadcrumbs {
+  margin-bottom: 12px;
+  font-size: 13px;
+}
+
+.app-breadcrumbs__list {
+  display: flex;
+  flex-wrap: wrap;
+  list-style: none;
+}
+
+.app-breadcrumbs__item + .app-breadcrumbs__item::before {
+  content: '›';
+  margin: 0 6px;
+  color: $app-secondary-text;
+}
+
+.app-breadcrumbs__item [aria-current] {
+  color: $app-muted-text;
+}

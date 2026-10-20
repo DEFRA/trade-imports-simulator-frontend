@@ -1,40 +1,26 @@
 {% extends 'layouts/page.njk' %}
 
-{% from "partials/traces/status-tag.njk" import statusTag %}
-{% from "partials/traces/ched-links.njk" import chedLinks with context %}
+{% from "partials/traces/ched-header.njk" import chedHeader, chedPart with context %}
 
 {% block content %}
-  {{ appBackLink({ href: "/traces", text: "CHEDs" }) }}
-  <div class="app-title-row">
-    {{ appHeading({ text: ched.id }) }}
-    <span class="app-muted">CHED-{{ ched.type }}</span>
-    {{ statusTag(ched.status) }}
-  </div>
+  {{ chedHeader(ched) }}
 
-  {% if decided %}
-    {% call appCard({ classes: "app-result" + (" app-result--rejected" if decided == "reject") }) %}
-      <p><strong>{{ "Accepted" if decided == "accept" else "Rejected" }}.</strong> The status is now {{ statusTag(ched.status) }}</p>
+  {% if created %}
+    {% call appCard({ classes: "app-result" }) %}
+      <p><strong>Created.</strong> The simulator issued this reference.
+        Next, <a href="/traces/cheds/{{ ched.id }}/decision">record the border decision in Part II</a>.</p>
     {% endcall %}
   {% endif %}
 
-  <div class="app-toolbar">
-    {{ appButton({ text: "Record a decision", href: "/traces/cheds/" ~ ched.id ~ "/decision", classes: "app-button--blue" }) }}
-    {{ chedLinks(ched.id) }}
-  </div>
-
   <script type="application/json" id="ched-model">{{ ched.model | jsonIsland }}</script>
-  {# Filled in by the form's client module when the simulator saves the CHED. #}
+  {# Shown by the form's client module when the simulator saves the CHED. #}
   <div id="ched-saved" hidden>
     {% call appCard({ classes: "app-result" }) %}
       <p><strong>Saved.</strong> The simulator rebuilt the certificate from the form.</p>
-      <details class="app-json">
-        <summary>Response</summary>
-        <pre data-result-response></pre>
-      </details>
     {% endcall %}
   </div>
 
-  {% call appCard({ title: { text: "Edit" } }) %}
+  {% call chedPart(ched, "I") %}
     {% set chedForm = {
       id: "edit-ched",
       model: "ched-model",

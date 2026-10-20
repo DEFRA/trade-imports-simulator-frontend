@@ -1,10 +1,12 @@
 {% extends 'layouts/page.njk' %}
 
-{% block content %}
-  {{ appBackLink({ href: "/traces", text: "CHEDs" }) }}
-  {{ appHeading({ text: "Create a CHED" }) }}
+{% from "partials/traces/ched-header.njk" import chedParts %}
 
-  {# Choosing a start fills the form below and enables it. #}
+{% block content %}
+  {{ appBreadcrumbs({ items: [{ text: "CHEDs", href: "/traces" }, { text: "Create a CHED" }] }) }}
+  {{ appHeading({ text: "Create a CHED", caption: "Part I, the declaration. " ~ chedParts["I"] }) }}
+
+  {# Step 1: choose a start. Choosing one hides this and shows step 2, the form, filled from it. #}
   <section class="app-start" id="ched-start" aria-labelledby="ched-start-title">
     <h2 class="app-start__title" id="ched-start-title">Start from</h2>
     <div class="app-start__options">
@@ -16,7 +18,7 @@
               text: start.text,
               type: "button",
               classes: "app-button--choice",
-              attributes: { "data-start": start.id, "aria-pressed": "false" }
+              attributes: { "data-start": start.id }
             }) }}
           {% endfor %}
         </div>
@@ -33,33 +35,19 @@
   </section>
   <script type="application/json" id="start-models">{{ startModels | jsonIsland }}</script>
 
-  {# Filled in by the form's client module when the simulator creates the CHED. #}
-  <div id="ched-created" hidden data-btms-portal-url="{{ btmsPortalUrl }}">
-    {% call appCard({ classes: "app-result", title: { html: 'Created <a class="app-mono" data-result-link data-result-id></a> ' ~ appTag({ text: "NEW" }) } }) %}
-      <p>The simulator issued this reference. The form below still holds what you sent, so you can change it and create another.</p>
-      <div class="app-button-row">
-        <a data-result-link>Open the CHED</a>
-        <a data-result-decision>Record a decision</a>
-        <a data-result-poc target="_blank" rel="noopener">View certificate</a>
-        <a data-result-btms target="_blank" rel="noopener">BTMS</a>
-        <a href="/traces">All CHEDs</a>
-      </div>
-      <details class="app-json">
-        <summary>Response</summary>
-        <pre data-result-response></pre>
-      </details>
-    {% endcall %}
-  </div>
-
+  <div id="ched-form-step" hidden>
   {% call appCard() %}
     {% set chedForm = {
       id: "create-ched",
       action: "/traces/api/cheds",
-      result: "ched-created",
+      done: "/traces/cheds/{id}?created=true",
       starts: "start-models",
       startPicker: "ched-start",
+      step: "ched-form-step",
+      scenarioAction: "/traces/api/scenarios",
       submitText: "Create CHED"
     } %}
     {% include "partials/traces/ched-form.njk" %}
   {% endcall %}
+  </div>
 {% endblock %}

@@ -1,4 +1,0 @@
-{#- Same params as govukBackLink. -#}
-<a href="{{ params.href }}" class="app-back-link {{- ' ' ~ params.classes if params.classes }}">
-  {{- params.html | safe if params.html else params.text | default('Back') -}}
-</a>

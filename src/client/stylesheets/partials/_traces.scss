@@ -1,4 +1,4 @@
-@use "variables" as *;
+@use 'variables' as *;
 
 .app-toolbar {
   display: flex;
@@ -19,10 +19,6 @@
   width: 22ch;
 }
 
-.app-input--short {
-  width: 7ch;
-}
-
 .app-title-row {
   display: flex;
   flex-wrap: wrap;
@@ -33,6 +29,45 @@
   .app-heading {
     margin-bottom: 0;
   }
+
+  // The external links sit at the far end of the row.
+  .app-links {
+    margin-left: auto;
+  }
+}
+
+.app-ched-title {
+  font-size: 20px;
+}
+
+// The part tabs open straight into the panel holding the form: the tab row's bottom border is the
+// panel's top edge, and the current tab breaks through it.
+.app-ched-part {
+  margin-bottom: 16px;
+
+  .app-sub-navigation {
+    margin-bottom: 0;
+  }
+}
+
+.app-ched-part__panel {
+  padding: 16px;
+  border: 1px solid $app-panel-border;
+  border-top: none;
+  border-radius: 0 0 6px 6px;
+  background: $app-panel-background;
+
+  // Part II's sections stay cards, but quieter ones, so they read as inside the panel.
+  .app-card {
+    background: $app-row-stripe;
+    border-color: $app-row-border;
+  }
+}
+
+// At the top of the panel: who completes this part in the real world.
+.app-part-intro {
+  margin-bottom: 12px;
+  color: $app-muted-text;
 }
 
 // The starting point sits above the form, outside it: choosing one fills the form and enables it.
@@ -53,9 +88,9 @@
 
 .app-start__options {
   display: flex;
-  flex-wrap: wrap;
-  align-items: flex-end;
-  gap: 12px 24px;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
 }
 
 .app-start__option {
@@ -71,14 +106,7 @@
 }
 
 .app-start__or {
-  padding-bottom: 6px;
   color: $app-muted-text;
-}
-
-.app-form-prompt {
-  margin-bottom: 12px;
-  color: $app-muted-text;
-  font-style: italic;
 }
 
 .app-form-body {
@@ -105,21 +133,6 @@
   padding: 4px 6px;
 }
 
-.app-json {
-  margin-top: 12px;
-
-  > summary {
-    cursor: pointer;
-    color: $app-blue;
-    font-weight: 500;
-  }
-
-  > pre {
-    max-height: 400px;
-    margin-top: 6px;
-  }
-}
-
 .app-result {
   border-left: 4px solid $app-green;
 }
@@ -133,4 +146,38 @@
 
 .app-result--rejected {
   border-left-color: $app-red;
+}
+
+// Decision checks read as TRACES's Part II: one row per question, its label to the left.
+.app-checks .app-radios {
+  flex-direction: row;
+  align-items: center;
+  padding: 6px 0;
+
+  // A floated legend joins the flex row; an unfloated one sits outside it.
+  > legend {
+    float: left;
+    flex: 0 0 100px;
+    padding: 0;
+  }
+}
+
+// Saving a scenario sits below the form's own buttons, apart from them, since it creates no CHED.
+.app-save-scenario {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 8px 12px;
+  margin-top: 16px;
+  padding-top: 12px;
+  border-top: 1px solid $app-row-border;
+}
+
+.app-input--scenario-name {
+  width: 36ch;
+}
+
+.app-save-scenario__status {
+  margin: 0 0 6px;
+  color: $app-muted-text;
 }

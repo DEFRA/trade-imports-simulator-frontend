@@ -3,7 +3,7 @@ import { load } from 'cheerio'
 import { createServer } from '#/server/server.js'
 import { statusCodes } from '#/server/common/constants/status-codes.js'
 import { mockSimulator } from '#/test-helpers/simulator.js'
-import { scenarios } from './scenarios/index.js'
+import { scenarios } from '#/test-helpers/scenarios/index.js'
 
 const liveHorses = scenarios[0].model
 
@@ -45,6 +45,17 @@ describe('TRACES routes', () => {
     return { ...response, $: load(response.payload) }
   }
 
+  function expectNewTabIndicators($) {
+    const links = $('a[target="_blank"]')
+    expect(links.length).toBeGreaterThan(0)
+    links.each((_, link) => {
+      expect($(link).find('[aria-hidden="true"]').text()).toBe('↗')
+      expect($(link).find('.app-visually-hidden').text()).toBe(
+        ' (opens in a new tab)'
+      )
+    })
+  }
+
   // A browser session as the create page starts one: its cookies, and the crumb from the page.
   async function session() {
     const { $, headers } = await get('/traces/cheds/new')
@@ -78,7 +89,12 @@ describe('TRACES routes', () => {
     }
   }
 
-  describe('Recent CHEDs', () => {
+  describe('CHED list', () => {
+    const rowsOf = ($) =>
+      $('tbody tr')
+        .map((_, row) => $(row).text().replace(/\s+/g, ' ').trim())
+        .get()
+
     test('Should offer to create or open a CHED', async () => {
       const { statusCode, $ } = await get('/traces')
 
@@ -88,37 +104,57 @@ describe('TRACES routes', () => {
       expect($('.app-empty').text()).toContain('None yet')
     })
 
-    test('Should list the CHEDs this session created, newest first, with current status', async () => {
+    test('Should list every CHED in the simulator, newest first, with current status', async () => {
       const chedP = structuredClone(liveHorses)
       chedP.exchangedDocument.includedNote.CHED_TYPE = 'P'
-      let browser = await session()
+      const browser = await session()
       for (const model of [liveHorses, chedP]) {
-        const created = await create(model, browser)
-        expect(created.statusCode).toBe(201)
-        browser = { ...browser, cookie: created.cookie }
+        expect((await create(model, browser)).statusCode).toBe(201)
       }
-      simulator.cheds.get('CHEDA.XI.2026.0000001').certificate.status =
-        'VALIDATED'
+      const chedA = simulator.cheds.get('CHEDA.XI.2026.0000001')
+      chedA.certificate.status = 'VALIDATED'
+      chedA.accessible = false
 
-      const { $ } = await get('/traces', browser.cookie)
-      const rows = $('tbody tr')
-        .map((_, row) => $(row).text().replace(/\s+/g, ' ').trim())
-        .get()
+      // A fresh browser: the list is the simulator's, not this session's.
+      const { $ } = await get('/traces')
 
-      expect(rows).toEqual([
-        'CHEDP.XI.2026.0000002 CHED-P NEW Decision View certificate Quantities BTMS',
-        'CHEDA.XI.2026.0000001 CHED-A VALIDATED Decision View certificate Quantities BTMS'
+      expect(rowsOf($)).toEqual([
+        'CHEDP.XI.2026.0000002 CHED-P NEW 22 Apr 2026 12:00 Decision View certificate ↗ (opens in a new tab) Quantities ↗ (opens in a new tab) BTMS ↗ (opens in a new tab)',
+        'CHEDA.XI.2026.0000001 CHED-A VALIDATED Not accessible 22 Apr 2026 12:00 Decision View certificate ↗ (opens in a new tab) Quantities ↗ (opens in a new tab) BTMS ↗ (opens in a new tab)'
       ])
+      expectNewTabIndicators($)
     })
 
-    test('Should mark a CHED the simulator no longer has', async () => {
+    test('Should page through older CHEDs', async () => {
       const browser = await session()
-      const { cookie } = await create(liveHorses, browser)
-      simulator.cheds.clear()
+      for (let i = 0; i < 21; i++) {
+        await create(liveHorses, browser)
+      }
 
-      const { $ } = await get('/traces', cookie)
+      const first = await get('/traces')
+      const second = await get('/traces?page=2')
 
-      expect($('tbody tr').text()).toContain('Not in the simulator')
+      expect(rowsOf(first.$)).toHaveLength(20)
+      expect(first.$('a[rel="next"]').attr('href')).toBe('/traces?page=2')
+      expect(first.$('a[rel="prev"]')).toHaveLength(0)
+      expect(rowsOf(second.$)[0]).toContain('CHEDA.XI.2026.0000001')
+      expect(second.$('a[rel="prev"]').attr('href')).toBe('/traces?page=1')
+      expect(second.$('a[rel="next"]')).toHaveLength(0)
+      expect(second.$('.app-pagination a[aria-current="page"]').text()).toBe(
+        '2'
+      )
+      expect(
+        second
+          .$('.app-pagination__list a')
+          .map((_, a) => second.$(a).text())
+          .get()
+      ).toEqual(['1', '2'])
+    })
+
+    test('Should refuse a page that is not a positive number', async () => {
+      const { statusCode } = await get('/traces?page=0')
+
+      expect(statusCode).toBe(statusCodes.badRequest)
     })
 
     test('Should open a CHED by reference', async () => {
@@ -132,7 +168,7 @@ describe('TRACES routes', () => {
   })
 
   describe('Create', () => {
-    test('Should offer blank CHED types and scenarios above a disabled form', async () => {
+    test('Should offer blank CHED types and scenarios, with the form hidden until one is chosen', async () => {
       const { statusCode, $ } = await get('/traces/cheds/new')
       const models = JSON.parse($('#start-models').text())
       const blanks = $('#ched-start [data-start]')
@@ -143,14 +179,82 @@ describe('TRACES routes', () => {
         .get()
 
       expect(statusCode).toBe(statusCodes.ok)
-      expect(blanks).toEqual(['blank-A', 'blank-P', 'blank-PP'])
+      expect(blanks).toEqual(['blank-A', 'blank-P', 'blank-PP', 'blank-D'])
       expect(options[0]).toBe('')
       expect(Object.keys(models)).toEqual([...blanks, ...options.slice(1)])
       expect($('#ched-start').closest('form')).toHaveLength(0)
-      expect($('[data-ched-form-body]').attr('disabled')).toBeDefined()
+      expect($('#ched-form-step').attr('hidden')).toBeDefined()
+      expect($('#ched-form-step form#create-ched')).toHaveLength(1)
       expect($('form#create-ched').attr('data-action')).toBe(
         '/traces/api/cheds'
       )
+    })
+
+    test('Should present creating as Part I, and go to the new CHED once created', async () => {
+      const { $ } = await get('/traces/cheds/new')
+
+      expect($('.app-breadcrumbs a').attr('href')).toBe('/traces')
+      expect($('.app-heading__caption').text()).toContain('Part I')
+      expect($('.app-heading__caption').text()).toContain('the operator')
+      expect($('form#create-ched').attr('data-done')).toBe(
+        '/traces/cheds/{id}?created=true'
+      )
+    })
+
+    test("Should offer the stub's scenarios, by name", async () => {
+      simulator.scenarios.set('a-saved-one', {
+        id: 'a-saved-one',
+        name: 'A saved one',
+        model: liveHorses
+      })
+
+      const { $ } = await get('/traces/cheds/new')
+      const models = JSON.parse($('#start-models').text())
+
+      expect(
+        $('#ched-start select option')
+          .map((_, option) => $(option).text())
+          .get()
+      ).toEqual([
+        'Choose a scenario',
+        'A saved one',
+        'CHED-A: cattle for slaughter, by head',
+        'CHED-A: live horses',
+        'CHED-P: milk',
+        'CHED-PP: navel oranges'
+      ])
+      expect(models['a-saved-one']).toEqual(liveHorses)
+      expect($('form#create-ched').attr('data-scenario-action')).toBe(
+        '/traces/api/scenarios'
+      )
+    })
+
+    test('Should save a scenario to the stub', async () => {
+      const response = await send(
+        'PUT',
+        '/traces/api/scenarios/horses-to-belfast',
+        { name: 'Horses to Belfast', model: liveHorses },
+        await session()
+      )
+
+      expect(response.statusCode).toBe(statusCodes.ok)
+      expect(simulator.scenarios.get('horses-to-belfast')).toEqual({
+        id: 'horses-to-belfast',
+        name: 'Horses to Belfast',
+        model: liveHorses
+      })
+    })
+
+    test('Should refuse a scenario ID that is not a slug', async () => {
+      const response = await send(
+        'PUT',
+        '/traces/api/scenarios/Horses%20to%20Belfast',
+        { name: 'Horses to Belfast', model: liveHorses },
+        await session()
+      )
+
+      expect(response.statusCode).toBe(statusCodes.badRequest)
+      expect(simulator.scenarios.has('Horses to Belfast')).toBe(false)
     })
 
     test('Should leave CHED type and status out of the form', async () => {
@@ -255,50 +359,83 @@ describe('TRACES routes', () => {
       return { response, stored: simulator.cheds.get(result.id).certificate }
     }
 
-    test('Should accept the CHED', async () => {
-      const { response, stored } = await decide({ decision: 'accept' })
+    test('Should validate the CHED with its checks', async () => {
+      const { response, stored } = await decide({
+        status: 'VALIDATED',
+        DOCUMENTARY_CHECK: 'YES',
+        DOCUMENTARY_CHECK_RESULT: 'SATISFACTORY',
+        PHYSICAL_CHECK: 'NO'
+      })
 
       expect(response.statusCode).toBe(statusCodes.ok)
       expect(stored.status).toBe('VALIDATED')
-      expect(
-        stored.exchangedDocument.clearance.includedClause.DECISION_CONCLUSION
-      ).toBe('ACCEPTABLE_FOR_FREE_CIRCULATION')
+      expect(stored.exchangedDocument.clearance.includedClause).toEqual({
+        DECISION_CONCLUSION: 'ACCEPTABLE_FOR_FREE_CIRCULATION',
+        DOCUMENTARY_CHECK: 'YES',
+        DOCUMENTARY_CHECK_RESULT: 'SATISFACTORY',
+        PHYSICAL_CHECK: 'NO'
+      })
     })
 
-    test('Should reject the CHED with a refusal reason', async () => {
+    test('Should reject the CHED', async () => {
       const { response, stored } = await decide({
-        decision: 'reject',
-        refusalReason: 'MISSING_CERTIFICATE'
+        status: 'REJECTED',
+        IDENTITY_CHECK: 'YES',
+        IDENTITY_CHECK_RESULT: 'NOT_SATISFACTORY'
       })
 
       expect(response.statusCode).toBe(statusCodes.ok)
       expect(stored.status).toBe('REJECTED')
-      expect(stored.exchangedDocument.includedNote.REFUSAL_REASON).toBe(
-        'MISSING_CERTIFICATE'
-      )
+      expect(
+        stored.exchangedDocument.clearance.includedClause.DECISION_CONCLUSION
+      ).toBe('NOT_ACCEPTABLE')
     })
 
-    test('Should refuse a decision it does not know', async () => {
-      const { response, stored } = await decide({ decision: 'maybe' })
+    test('Should save checks in progress without a conclusion', async () => {
+      const { response, stored } = await decide({
+        status: 'IN_PROGRESS',
+        DOCUMENTARY_CHECK: 'YES'
+      })
 
-      expect(response.statusCode).toBe(statusCodes.badRequest)
-      expect(stored.status).toBeUndefined()
+      expect(response.statusCode).toBe(statusCodes.ok)
+      expect(stored.status).toBe('IN_PROGRESS')
+      expect(stored.exchangedDocument.clearance.includedClause).toEqual({
+        DOCUMENTARY_CHECK: 'YES'
+      })
     })
 
-    test('Should show the decision on the CHED page it returns to', async () => {
+    test('Should refuse a status or code it does not know', async () => {
+      for (const decision of [
+        { status: 'maybe' },
+        { status: 'VALIDATED', PHYSICAL_CHECK: 'SOMETIMES' }
+      ]) {
+        const { response, stored } = await decide(decision)
+
+        expect(response.statusCode).toBe(statusCodes.badRequest)
+        expect(stored.status).toBeUndefined()
+      }
+    })
+
+    test('Should show the decision on the Part II page it reloads', async () => {
       const browser = await session()
       const { result } = await create(liveHorses, browser)
       await send(
         'POST',
         `/traces/api/cheds/${result.id}/decision`,
-        { decision: 'accept' },
+        { status: 'VALIDATED' },
         browser
       )
 
-      const { $ } = await get(`/traces/cheds/${result.id}?decided=accept`)
+      const { $ } = await get(
+        `/traces/cheds/${result.id}/decision?decided=VALIDATED`
+      )
 
-      expect($('.app-result').text()).toContain('Accepted.')
+      expect($('.app-result').text()).toContain('Decision saved.')
       expect($('.app-result .app-tag').text()).toBe('VALIDATED')
+      expect($('.app-title-row .app-tag').text()).toBe('VALIDATED')
+      expect($('form[data-module="app-decision-form"]').attr('data-done')).toBe(
+        `/traces/cheds/${result.id}/decision`
+      )
     })
   })
 
@@ -316,25 +453,73 @@ describe('TRACES routes', () => {
         `http://localhost:3000/search-result?searchTerm=${result.id}`
       )
       expect(JSON.parse($('#ched-model').text())).toEqual(liveHorses)
-      expect($('[data-ched-form-body]').attr('disabled')).toBeUndefined()
       expect($('form#edit-ched').attr('data-action')).toBe(
         `/traces/api/cheds/${result.id}`
       )
       expect($('form#edit-ched').attr('data-method')).toBe('PUT')
     })
 
-    test('Should offer accept and reject on the decision page', async () => {
+    test('Should show Part I and Part II as tabs, naming who completes each', async () => {
+      const { result } = await create(liveHorses, await session())
+      const tabs = ($) =>
+        $('.app-sub-navigation a')
+          .map((_, a) => $(a).text().replace(/\s+/g, ' '))
+          .get()
+
+      const partOne = (await get(`/traces/cheds/${result.id}`)).$
+      const partTwo = (await get(`/traces/cheds/${result.id}/decision`)).$
+
+      expect(tabs(partOne)).toEqual(['Part I Declaration', 'Part II Decision'])
+      expect(partOne('[aria-current="page"]').last().text()).toContain('Part I')
+      expect(partOne('.app-part-intro').text()).toContain('the operator')
+      expect(partTwo('a[aria-current="page"]').text()).toContain('Part II')
+      expect(partTwo('.app-part-intro').text()).toContain('border control post')
+      expect(partTwo('.app-breadcrumbs a').attr('href')).toBe('/traces')
+    })
+
+    test('Should point to Part II after creating a CHED', async () => {
+      const { result } = await create(liveHorses, await session())
+
+      const { $ } = await get(`/traces/cheds/${result.id}?created=true`)
+
+      expect($('.app-result').text()).toContain('Created.')
+      expect($('.app-result a').attr('href')).toBe(
+        `/traces/cheds/${result.id}/decision`
+      )
+    })
+
+    test('Should open an undecided CHED as in progress, with one save button', async () => {
       const { result } = await create(liveHorses, await session())
 
       const { statusCode, $ } = await get(`/traces/cheds/${result.id}/decision`)
 
       expect(statusCode).toBe(statusCodes.ok)
-      expect(
-        $('main button')
-          .map((_, b) => $(b).text())
-          .get()
-      ).toEqual(['Accept', 'Reject'])
-      expect($('form[data-module="app-decision-form"]')).toHaveLength(2)
+      expect($('form[data-module="app-decision-form"]')).toHaveLength(1)
+      expect($('main button').text()).toBe('Save')
+      expect($('[name="status"]:checked').val()).toBe('IN_PROGRESS')
+      expect($('[name="DOCUMENTARY_CHECK"]:checked')).toHaveLength(0)
+    })
+
+    test('Should open a decided CHED with its checks and status', async () => {
+      const browser = await session()
+      const { result } = await create(liveHorses, browser)
+      await send(
+        'POST',
+        `/traces/api/cheds/${result.id}/decision`,
+        {
+          status: 'REJECTED',
+          PHYSICAL_CHECK: 'YES',
+          PHYSICAL_CHECK_RESULT: 'NOT_SATISFACTORY'
+        },
+        browser
+      )
+
+      const { $ } = await get(`/traces/cheds/${result.id}/decision`)
+
+      expect($('[name="status"]:checked').val()).toBe('REJECTED')
+      expect($('[name="PHYSICAL_CHECK_RESULT"]:checked').val()).toBe(
+        'NOT_SATISFACTORY'
+      )
     })
 
     test('Should be not found when the simulator has no such CHED', async () => {

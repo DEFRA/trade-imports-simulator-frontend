@@ -3,13 +3,38 @@
 // doesn't show is kept as it was. That includes the CHED type, fixed when the CHED is started, and
 // the status, which the simulator drives.
 
-const kilograms = { GRM: 0.001, KGM: 1, TNE: 1000 }
+// How a commodity line's quantity is given, by CHED type: animals (CHED-A) are counted, everything
+// else is weighed. These are the units the stub's customs ledger understands; mass units convert
+// between themselves, and a count never mixes with a mass.
+const volume = {
+  heading: 'Volume',
+  measure: 'netVolume',
+  units: [{ code: 'H87', text: 'Unit' }],
+  defaultUnit: 'H87'
+}
+const weight = {
+  heading: 'Weight',
+  measure: 'netWeight',
+  units: [
+    { code: 'GRM', text: 'G' },
+    { code: 'KGM', text: 'KG' },
+    { code: 'TNE', text: 'Tonne' }
+  ],
+  defaultUnit: 'KGM'
+}
+
+export function quantityOf(model) {
+  return model?.exchangedDocument?.includedNote?.CHED_TYPE === 'A'
+    ? volume
+    : weight
+}
 
 export function fromModel(model) {
   const document = model?.exchangedDocument ?? {}
   const consignment = model?.specifiedConsignment ?? {}
   const declaration = document.declaration?.includedClause ?? {}
   const lines = consignment.includedConsignmentItem?.includedTradeLineItem ?? []
+  const quantity = quantityOf(model)
 
   return {
     purpose: declaration.PURPOSE ?? '',
@@ -19,29 +44,24 @@ export function fromModel(model) {
     consignee: consignment.consigneeParty?.identifier ?? '',
     exportCountry: consignment.exportCountry ?? '',
     importCountry: consignment.importCountry ?? '',
-    lines: lines.map(fromLine)
+    lines: lines.map((line) => fromLine(line, quantity))
   }
 }
 
-function fromLine(line) {
-  const weight = line.netWeight
-  const pieces = line.netVolume?.unitCode === 'H87' ? line.netVolume.value : ''
-  const packaging = line.physicalReferencedLogisticsPackage
+function fromLine(line, quantity) {
+  const amount = line[quantity.measure]
 
   return {
     cnCode: line.applicableClassification?.CN ?? '',
     originCountry: line.originCountry ?? '',
-    netWeight: weight
-      ? String(weight.value * (kilograms[weight.unitCode] ?? 1))
-      : '',
-    pieces: String(pieces),
-    packages: String(packaging?.itemQuantity ?? ''),
-    packageType: packaging?.typeCode ?? ''
+    quantity: amount ? String(amount.value) : '',
+    unit: amount?.unitCode ?? ''
   }
 }
 
 export function toModel(base, values) {
   const model = structuredClone(base ?? {})
+  const quantity = quantityOf(model)
 
   const declaration = ['exchangedDocument', 'declaration', 'includedClause']
   set(model, [...declaration, 'PURPOSE'], values.purpose)
@@ -58,40 +78,54 @@ export function toModel(base, values) {
   set(model, [...consignment, 'exportCountry'], values.exportCountry)
   set(model, [...consignment, 'importCountry'], values.importCountry)
 
+  // The form doesn't ask for these countries because they follow from the two above: the consignor
+  // sends from the export country, and the consignee and the border control post are in the import country.
+  set(
+    model,
+    [...consignment, 'consignorParty', 'postalAddress', 'countryId'],
+    values.exportCountry
+  )
+  set(
+    model,
+    [...consignment, 'consigneeParty', 'postalAddress', 'countryId'],
+    values.importCountry
+  )
+  set(
+    model,
+    [...consignment, 'unloadingBaseportLocation', 'countryId'],
+    values.importCountry
+  )
+
   const item = [...consignment, 'includedConsignmentItem']
   const baseLines = get(model, [...item, 'includedTradeLineItem']) ?? []
   set(
     model,
     [...item, 'includedTradeLineItem'],
-    values.lines.map((line, index) => toLine(baseLines[index], line))
+    values.lines.map((line, index) => toLine(baseLines[index], line, quantity))
   )
 
   return model
 }
 
-function toLine(base, values) {
+// The line's other measure (a weight on a CHED-A, say) and its packaging are left as the base had
+// them: the form doesn't show them, so it mustn't drop them.
+function toLine(base, values, quantity) {
   const line = structuredClone(base ?? {})
 
   set(line, ['applicableClassification', 'CN'], values.cnCode)
   set(line, ['originCountry'], values.originCountry)
-  set(line, ['netWeight'], measure(values.netWeight, 'KGM'))
-  set(line, ['netVolume'], measure(values.pieces, 'H87'))
   set(
     line,
-    ['physicalReferencedLogisticsPackage'],
-    values.packages === ''
+    [quantity.measure],
+    values.quantity === ''
       ? undefined
       : {
-          typeCode: values.packageType || 'BX',
-          itemQuantity: Number(values.packages)
+          value: Number(values.quantity),
+          unitCode: values.unit || quantity.defaultUnit
         }
   )
 
   return line
-}
-
-function measure(value, unitCode) {
-  return value === '' ? undefined : { value: Number(value), unitCode }
 }
 
 function get(target, path) {

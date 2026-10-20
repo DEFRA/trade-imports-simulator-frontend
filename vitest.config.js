@@ -6,6 +6,8 @@ export default defineConfig({
     environment: 'node',
     clearMocks: true,
     setupFiles: ['.vite/setup-files.js'],
+    // Dates render in local time, so tests pin it, however vitest is started.
+    env: { TZ: 'UTC' },
     coverage: {
       provider: 'v8',
       reportsDirectory: './coverage',

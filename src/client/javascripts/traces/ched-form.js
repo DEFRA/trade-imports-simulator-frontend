@@ -1,5 +1,7 @@
-import { fromModel, toModel } from './ched-model.js'
+import { fromModel, quantityOf, toModel } from './ched-model.js'
 import { sendJson } from '../send-json.js'
+import { CommodityPicker } from './commodity-picker.js'
+import { loadTree } from './commodity-trees.js'
 
 const fields = [
   'purpose',
@@ -10,14 +12,15 @@ const fields = [
   'exportCountry',
   'importCountry'
 ]
-const lineFields = [
-  'cnCode',
-  'originCountry',
-  'netWeight',
-  'pieces',
-  'packages',
-  'packageType'
-]
+const lineFields = ['cnCode', 'originCountry', 'quantity', 'unit']
+
+// A new CHED's arrival at the border control post, which the form doesn't show: this time tomorrow,
+// to the minute.
+function tomorrow() {
+  const date = new Date(Date.now() + 24 * 60 * 60 * 1000)
+  date.setSeconds(0, 0)
+  return date.toISOString()
+}
 
 // A select given a value it doesn't offer selects nothing, so fall back to its first option. That
 // is how a blank CHED, which has no values, picks up the form's defaults.
@@ -35,17 +38,14 @@ function readJson(id) {
 
 // The CHED form, used to create and to edit. It fills itself from a control model (the loaded
 // CHED, or the start chosen on the create page) and builds the control model back by laying its
-// values over that same model. Until it has a model its fields stay disabled.
+// values over that same model. On the create page it waits, hidden, for a start to be chosen.
 export class ChedForm {
   constructor(form) {
     this.form = form
     this.lines = form.querySelector('[data-ched-form-lines]')
     this.lineTemplate = form.querySelector('[data-ched-form-line]')
-    this.request = form.querySelector('[data-ched-form-request]')
     this.lineCount = 0
-
-    this.body = form.querySelector('[data-ched-form-body]')
-    this.prompt = form.querySelector('[data-ched-form-prompt]')
+    this.pickers = new Map()
 
     this.starts = readJson(form.dataset.starts) ?? {}
     this.picker = document.getElementById(form.dataset.startPicker)
@@ -59,18 +59,18 @@ export class ChedForm {
 
     form
       .querySelector('[data-ched-form-add]')
-      ?.addEventListener('click', () => {
-        this.addLine()
-        this.showRequest()
-      })
+      ?.addEventListener('click', () => this.addLine())
     this.lines.addEventListener('click', (event) => {
       const remove = event.target.closest('[data-ched-form-remove]')
       if (remove) {
-        remove.closest('tr').remove()
-        this.showRequest()
+        const line = remove.closest('tr')
+        this.pickers.delete(line)
+        line.remove()
       }
     })
-    form.addEventListener('input', () => this.showRequest())
+    form
+      .querySelector('[data-scenario-save]')
+      ?.addEventListener('click', () => this.saveScenario())
     form.addEventListener('submit', (event) => {
       event.preventDefault()
       this.submit()
@@ -80,30 +80,52 @@ export class ChedForm {
     if (model) this.load(model)
   }
 
-  // Shows which start is in use: the pressed button, or the scenario in the select.
+  // Step 1 to step 2: fills the form from the chosen start, then swaps the picker for the form.
   start(id) {
-    for (const button of this.picker.querySelectorAll('[data-start]')) {
-      button.setAttribute('aria-pressed', String(button.dataset.start === id))
-    }
-    const select = this.picker.querySelector('select')
-    const isScenario = [...select.options].some((option) => option.value === id)
-    select.value = isScenario ? id : ''
+    const model = structuredClone(this.starts[id])
+    model.specifiedConsignment ??= {}
+    model.specifiedConsignment.availabilityDueDateTime ??= tomorrow()
+    this.load(model)
 
-    this.load(this.starts[id])
+    this.picker.hidden = true
+    document.getElementById(this.form.dataset.step).hidden = false
   }
 
   load(model) {
     this.base = model
-    this.body.disabled = false
-    this.prompt?.remove()
+    this.quantity = quantityOf(model)
     const values = fromModel(this.base)
+
+    this.form.querySelector('[data-ched-form-quantity-heading]').textContent =
+      this.quantity.heading
 
     for (const name of fields) {
       setField(this.form.elements[name], values[name])
     }
+    // Before the lines, so they don't pick up the last start's tree.
+    this.loadCommodities(this.base.exchangedDocument?.includedNote?.CHED_TYPE)
     this.lines.replaceChildren()
+    this.pickers.clear()
     values.lines.forEach((line) => this.addLine(line))
-    this.showRequest()
+    // A CHED needs a commodity, so one without a line starts with an empty one.
+    if (!values.lines.length) this.addLine()
+  }
+
+  // The CN code pickers search the CHED type's commodity tree, which loads while the form is in
+  // use. Lines added before it arrives get it here; lines added after get it in addLine.
+  async loadCommodities(chedType) {
+    this.chedType = chedType
+    this.tree = undefined
+    if (!chedType) return
+    try {
+      const tree = await loadTree(chedType)
+      // A start of another type may have been chosen while this tree was on its way.
+      if (this.chedType !== chedType) return
+      this.tree = tree
+      for (const picker of this.pickers.values()) picker.setTree(tree)
+    } catch (error) {
+      this.showError(`The commodity tree didn't load: ${error.message}`)
+    }
   }
 
   addLine(values = {}) {
@@ -112,10 +134,26 @@ export class ChedForm {
     row.innerHTML = this.lineTemplate.innerHTML.replaceAll('__INDEX__', index)
     const line = row.firstElementChild
 
-    for (const name of lineFields) {
+    // The units on offer depend on the CHED type, so they're filled in here, not in the template.
+    const unit = line.querySelector('[data-line-field="unit"]')
+    for (const { code, text } of this.quantity.units) {
+      const option = document.createElement('option')
+      option.value = code
+      option.textContent = text
+      unit.append(option)
+    }
+
+    const picker = new CommodityPicker(
+      line.querySelector('[data-commodity-picker]')
+    )
+    if (this.tree) picker.setTree(this.tree)
+    picker.setValue(values.cnCode ?? '')
+    this.pickers.set(line, picker)
+
+    for (const name of lineFields.filter((field) => field !== 'cnCode')) {
       setField(
         line.querySelector(`[data-line-field="${name}"]`),
-        values[name] ?? ''
+        values[name] || (name === 'unit' ? this.quantity.defaultUnit : '')
       )
     }
     this.lines.append(line)
@@ -145,6 +183,12 @@ export class ChedForm {
     const action = this.form.dataset.action
     if (!action) return
 
+    // The stub would build a certificate with an unclassified commodity, so stop it here.
+    if (this.values().lines.some((line) => !line.cnCode)) {
+      this.showError('Every commodity line needs a CN code.')
+      return
+    }
+
     const button = this.form.querySelector('[data-ched-form-submit]')
     button.disabled = true
     this.showError()
@@ -155,9 +199,16 @@ export class ChedForm {
         this.form.dataset.method ?? 'POST',
         this.model()
       )
+      const done = this.form.dataset.done
+      if (done) {
+        window.location.assign(
+          done.replace('{id}', encodeURIComponent(stored.id))
+        )
+        return
+      }
       // Later saves build on what the simulator now holds.
       this.base = stored.certificate
-      this.showResult(stored)
+      this.showResult()
     } catch (error) {
       this.showError(error.message)
     } finally {
@@ -165,26 +216,42 @@ export class ChedForm {
     }
   }
 
-  // Fills whichever slots the result panel has: the create panel links to the new CHED, the
-  // saved panel only shows the response.
-  showResult(stored) {
+  // Saves the form as a scenario in the stub, under an ID made from its name. The arrival time is
+  // left out so the scenario sets it to tomorrow whenever it's used, rather than to a date that has
+  // passed.
+  async saveScenario() {
+    const status = this.form.querySelector('[data-scenario-status]')
+    const name = this.form.querySelector('[data-scenario-name]').value.trim()
+    const id = name
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-|-$/g, '')
+    if (!id) {
+      status.textContent = 'Give the scenario a name.'
+      return
+    }
+    if (this.values().lines.some((line) => !line.cnCode)) {
+      status.textContent = 'Every commodity line needs a CN code.'
+      return
+    }
+
+    const model = this.model()
+    delete model.specifiedConsignment?.availabilityDueDateTime
+    try {
+      const saved = await sendJson(
+        `${this.form.dataset.scenarioAction}/${id}`,
+        'PUT',
+        { name, model }
+      )
+      status.textContent = `Saved scenario "${saved.name}".`
+    } catch (error) {
+      status.textContent = `Not saved: ${error.message}`
+    }
+  }
+
+  showResult() {
     const result = document.getElementById(this.form.dataset.result)
     if (!result) return
-
-    const id = encodeURIComponent(stored.id)
-    const slot = (name) => result.querySelector(`[data-result-${name}]`)
-    for (const link of result.querySelectorAll('[data-result-link]')) {
-      link.href = `/traces/cheds/${id}`
-    }
-    if (slot('id')) slot('id').textContent = stored.id
-    if (slot('decision')) slot('decision').href = `/traces/cheds/${id}/decision`
-    if (slot('poc')) slot('poc').href = `/poc/simulator/ched/${id}`
-    if (slot('btms')) {
-      slot('btms').href =
-        `${result.dataset.btmsPortalUrl}/search-result?searchTerm=${id}`
-    }
-    slot('response').textContent = JSON.stringify(stored, null, 2)
-
     result.hidden = false
     result.scrollIntoView({ behavior: 'smooth', block: 'start' })
   }
@@ -196,12 +263,6 @@ export class ChedForm {
     if (message) {
       error.querySelector('[data-ched-form-error-detail]').textContent = message
       error.scrollIntoView({ behavior: 'smooth', block: 'start' })
-    }
-  }
-
-  showRequest() {
-    if (this.request) {
-      this.request.textContent = JSON.stringify(this.model(), null, 2)
     }
   }
 }

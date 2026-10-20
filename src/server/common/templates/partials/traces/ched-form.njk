@@ -1,17 +1,22 @@
 {#-
   The CHED form, shared by the create and edit pages. The ched-form client module fills it from a
   control model and builds the request. Expects `items` (select options) and `chedForm`:
-  { id, submitText, and either model (the edit page) or starts and startPicker (the create page) }.
-  Without a model the fields stay disabled until a start is chosen. Submitting sends the model as
-  JSON to `action` (by `method`, POST unless set) and shows the response in the `result` element.
+  { id, submitText, and either model (the edit page) or starts, startPicker and step (the create
+  page) }. Choosing a start hides the picker and shows the step holding the form. Submitting sends the model as
+  JSON to `action` (by `method`, POST unless set), then goes to `done`, with `{id}` replaced by the
+  saved CHED's, or else shows the `result` element.
+  With `scenarioAction`, the form can also be saved as a scenario there, and joins the start picker.
 -#}
 <form id="{{ chedForm.id }}" method="post" novalidate data-module="app-ched-form"
   {%- if chedForm.model %} data-model="{{ chedForm.model }}"{% endif %}
   {%- if chedForm.starts %} data-starts="{{ chedForm.starts }}"{% endif %}
   {%- if chedForm.startPicker %} data-start-picker="{{ chedForm.startPicker }}"{% endif %}
+  {%- if chedForm.step %} data-step="{{ chedForm.step }}"{% endif %}
   {%- if chedForm.action %} data-action="{{ chedForm.action }}"{% endif %}
   {%- if chedForm.method %} data-method="{{ chedForm.method }}"{% endif %}
-  {%- if chedForm.result %} data-result="{{ chedForm.result }}"{% endif %}>
+  {%- if chedForm.result %} data-result="{{ chedForm.result }}"{% endif %}
+  {%- if chedForm.done %} data-done="{{ chedForm.done }}"{% endif %}
+  {%- if chedForm.scenarioAction %} data-scenario-action="{{ chedForm.scenarioAction }}"{% endif %}>
 
   <div data-ched-form-error hidden>
     {{ appErrorSummary({
@@ -20,10 +25,7 @@
     }) }}
   </div>
 
-  {% if not chedForm.model %}
-  <p class="app-form-prompt" data-ched-form-prompt>Choose a starting point above to fill in the form.</p>
-  {% endif %}
-  <fieldset class="app-form-body" data-ched-form-body {%- if not chedForm.model %} disabled{% endif %}>
+  <fieldset class="app-form-body">
   <legend class="app-visually-hidden">CHED details</legend>
 
   <h3>Declaration</h3>
@@ -47,10 +49,9 @@
       <tr>
         <th scope="col">CN code</th>
         <th scope="col">Origin</th>
-        <th scope="col">Net weight (kg)</th>
-        <th scope="col">Head</th>
-        <th scope="col">Packages</th>
-        <th scope="col">Package type</th>
+        {# Volume or Weight, set by the client module from the CHED type. #}
+        <th scope="col" data-ched-form-quantity-heading>Quantity</th>
+        <th scope="col">Unit</th>
         <th scope="col"><span class="app-visually-hidden">Actions</span></th>
       </tr>
     </thead>
@@ -58,12 +59,11 @@
   </table>
   <template data-ched-form-line>
     <tr>
-      <td>{{ appSelect({ id: "line-__INDEX__-cnCode", name: "cnCode", label: { text: "CN code", classes: "app-visually-hidden" }, items: items.cnCodes, attributes: { "data-line-field": "cnCode" } }) }}</td>
-      <td>{{ appSelect({ id: "line-__INDEX__-originCountry", name: "originCountry", label: { text: "Origin", classes: "app-visually-hidden" }, items: items.countries, attributes: { "data-line-field": "originCountry" } }) }}</td>
-      <td>{{ appInput({ id: "line-__INDEX__-netWeight", name: "netWeight", inputmode: "decimal", label: { text: "Net weight (kg)", classes: "app-visually-hidden" }, attributes: { "data-line-field": "netWeight" } }) }}</td>
-      <td>{{ appInput({ id: "line-__INDEX__-pieces", name: "pieces", inputmode: "numeric", label: { text: "Head", classes: "app-visually-hidden" }, attributes: { "data-line-field": "pieces" } }) }}</td>
-      <td>{{ appInput({ id: "line-__INDEX__-packages", name: "packages", inputmode: "numeric", label: { text: "Packages", classes: "app-visually-hidden" }, attributes: { "data-line-field": "packages" } }) }}</td>
-      <td>{{ appInput({ id: "line-__INDEX__-packageType", name: "packageType", label: { text: "Package type", classes: "app-visually-hidden" }, attributes: { "data-line-field": "packageType" }, classes: "app-input--short" }) }}</td>
+      <td>{{ appCommodityPicker({ id: "line-__INDEX__-cnCode", name: "cnCode", label: { text: "CN code", classes: "app-visually-hidden" }, attributes: { "data-line-field": "cnCode" } }) }}</td>
+      <td>{{ appSelect({ id: "line-__INDEX__-originCountry", name: "originCountry", label: { text: "Origin", classes: "app-visually-hidden" }, items: items.lineCountries, attributes: { "data-line-field": "originCountry" } }) }}</td>
+      <td>{{ appInput({ id: "line-__INDEX__-quantity", name: "quantity", inputmode: "decimal", label: { text: "Quantity", classes: "app-visually-hidden" }, attributes: { "data-line-field": "quantity" } }) }}</td>
+      {# Options come from the CHED type: the client module fills them. #}
+      <td>{{ appSelect({ id: "line-__INDEX__-unit", name: "unit", label: { text: "Unit", classes: "app-visually-hidden" }, items: [], attributes: { "data-line-field": "unit" } }) }}</td>
       <td>{{ appButton({ text: "Remove", type: "button", classes: "app-button--link", attributes: { "data-ched-form-remove": "" } }) }}</td>
     </tr>
   </template>
@@ -72,13 +72,23 @@
     {{ appButton({ text: "Add line", type: "button", classes: "app-button--secondary", attributes: { "data-ched-form-add": "" } }) }}
   </div>
 
-  <details class="app-json">
-    <summary>Request</summary>
-    <pre data-ched-form-request></pre>
-  </details>
-
   <div class="app-button-row">
     {{ appButton({ text: chedForm.submitText, attributes: { "data-ched-form-submit": "" } }) }}
   </div>
+
+  {% if chedForm.scenarioAction %}
+  {# Not a form of its own: a form can't nest, and the scenario is this form's model. #}
+  <div class="app-save-scenario">
+    {{ appInput({
+      name: "scenarioName",
+      label: { text: "Save as a scenario" },
+      hint: { text: "Saving under an existing scenario's name replaces it." },
+      classes: "app-input--scenario-name",
+      attributes: { "data-scenario-name": "" }
+    }) }}
+    {{ appButton({ text: "Save scenario", type: "button", classes: "app-button--secondary", attributes: { "data-scenario-save": "" } }) }}
+    <p class="app-save-scenario__status" role="status" data-scenario-status></p>
+  </div>
+  {% endif %}
   </fieldset>
 </form>

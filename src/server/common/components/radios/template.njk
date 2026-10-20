@@ -1,0 +1,19 @@
+{#- Same params as govukRadios: `value` checks the matching item, or an item can set `checked`. Always inline. -#}
+{% from "macros/attributes.njk" import appAttributes %}
+{% set idPrefix = params.idPrefix or params.name %}
+<fieldset class="app-field app-radios {{- ' ' ~ params.formGroup.classes if params.formGroup.classes }}" {{- appAttributes(params.fieldset.attributes) }}>
+  {% if params.fieldset.legend %}
+  <legend class="app-field__label">{{ params.fieldset.legend.html | safe if params.fieldset.legend.html else params.fieldset.legend.text }}</legend>
+  {% endif %}
+  <div class="app-radios__items">
+    {% for item in params.items %}
+    {% set id = idPrefix ~ ("-" ~ loop.index if loop.index > 1) %}
+    <label class="app-radios__item" for="{{ id }}">
+      <input class="app-radios__input" type="radio" id="{{ id }}" name="{{ params.name }}" value="{{ item.value }}"
+        {%- if item.checked or (params.value is defined and params.value !== null and item.value == params.value) %} checked{% endif %}
+        {%- if item.disabled %} disabled{% endif %}>
+      {{ item.html | safe if item.html else item.text }}
+    </label>
+    {% endfor %}
+  </div>
+</fieldset>

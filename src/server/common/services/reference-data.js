@@ -9,8 +9,7 @@ const lists = {
   borderControlPosts: 'authorities',
   operators: 'operators',
   countries: 'country',
-  cnCodes: 'cn_code',
-  refusalReasons: 'refusal_reason'
+  cnCodes: 'cn_code'
 }
 
 let cached

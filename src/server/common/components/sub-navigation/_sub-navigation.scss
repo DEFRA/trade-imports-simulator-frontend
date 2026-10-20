@@ -1,0 +1,35 @@
+@use 'variables' as *;
+
+.app-sub-navigation {
+  margin-bottom: 16px;
+  border-bottom: 1px solid $app-panel-border;
+}
+
+.app-sub-navigation__list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  list-style: none;
+}
+
+// The current page's tab joins the card below it.
+.app-sub-navigation__link {
+  display: block;
+  margin-bottom: -1px;
+  padding: 8px 14px;
+  border: 1px solid transparent;
+  border-radius: 6px 6px 0 0;
+  text-decoration: none;
+
+  &:hover {
+    background: $app-tint-blue;
+  }
+
+  &[aria-current='page'] {
+    border-color: $app-panel-border;
+    border-bottom-color: $app-panel-background;
+    background: $app-panel-background;
+    color: $app-text;
+    font-weight: 700;
+  }
+}

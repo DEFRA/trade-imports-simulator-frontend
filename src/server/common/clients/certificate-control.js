@@ -57,6 +57,11 @@ export function createChed(model) {
   })
 }
 
+/** One page of every CHED, newest first: `{ page, pageSize, hasMore, items: [{ id, accessible, updated, certificate }] }`. */
+export function listCheds({ page = 1, pageSize = 20 } = {}) {
+  return send(`/cheds?${new URLSearchParams({ page, pageSize })}`)
+}
+
 /** The model a CHED was built from, after any patches: `{ id, accessible, certificate }`. */
 export function getChed(id) {
   return send(`/cheds/${encodeURIComponent(id)}`)
@@ -68,5 +73,24 @@ export function updateChed(id, model) {
     method: 'PUT',
     headers: { 'content-type': 'application/json' },
     body: JSON.stringify(model)
+  })
+}
+
+/** A CHED type's commodity tree, as TRACES publishes it: `{ chedType, treeId, nodes, ... }`. */
+export function getCommodityTree(chedType) {
+  return send(`/commodity-trees/${encodeURIComponent(chedType)}`)
+}
+
+/** Every scenario, by name: `[{ id, name, model }]`. */
+export function listScenarios() {
+  return send('/scenarios')
+}
+
+/** Saves a scenario under this ID, replacing any with it: `{ id, name, model }`. */
+export function saveScenario(id, scenario) {
+  return send(`/scenarios/${encodeURIComponent(id)}`, {
+    method: 'PUT',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify(scenario)
   })
 }

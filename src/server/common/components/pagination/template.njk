@@ -1,0 +1,33 @@
+{#-
+  Same params as govukPagination: { landmarkLabel, previous: { href, text, labelText },
+  next: { href, text, labelText }, items: [{ number, href, current } or { ellipsis: true }] }.
+-#}
+<nav class="app-pagination {{- ' ' ~ params.classes if params.classes }}" aria-label="{{ params.landmarkLabel | default('Pagination') }}">
+  {% if params.previous %}
+  <a class="app-pagination__link app-pagination__prev" href="{{ params.previous.href }}" rel="prev">
+    <span aria-hidden="true">←</span> {{ params.previous.text | default('Previous') }}
+    {%- if params.previous.labelText %}<span class="app-visually-hidden">: {{ params.previous.labelText }}</span>{% endif %}
+  </a>
+  {% endif %}
+  {% if params.items | length %}
+  <ul class="app-pagination__list">
+    {% for item in params.items %}
+    <li class="app-pagination__item">
+      {% if item.ellipsis %}
+      <span class="app-pagination__ellipsis">…</span>
+      {% elif item.current %}
+      <a class="app-pagination__link app-pagination__link--current" href="{{ item.href }}" aria-current="page" aria-label="Page {{ item.number }}">{{ item.number }}</a>
+      {% else %}
+      <a class="app-pagination__link" href="{{ item.href }}" aria-label="Page {{ item.number }}">{{ item.number }}</a>
+      {% endif %}
+    </li>
+    {% endfor %}
+  </ul>
+  {% endif %}
+  {% if params.next %}
+  <a class="app-pagination__link app-pagination__next" href="{{ params.next.href }}" rel="next">
+    {{ params.next.text | default('Next') }}
+    {%- if params.next.labelText %}<span class="app-visually-hidden">: {{ params.next.labelText }}</span>{% endif %} <span aria-hidden="true">→</span>
+  </a>
+  {% endif %}
+</nav>

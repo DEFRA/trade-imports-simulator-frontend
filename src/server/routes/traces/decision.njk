@@ -1,15 +1,33 @@
 {% extends 'layouts/page.njk' %}
 
 {% from "partials/traces/status-tag.njk" import statusTag %}
+{% from "partials/traces/ched-header.njk" import chedHeader, chedPart with context %}
+
+{% macro checkRow(name, legend) %}
+  {{ appRadios({
+    name: name,
+    fieldset: { legend: { text: legend } },
+    value: clauses[name],
+    items: [
+      { value: "YES", text: "Yes" },
+      { value: "NO", text: "No" }
+    ] if name.endsWith("_CHECK") else [
+      { value: "SATISFACTORY", text: "Satisfactory" },
+      { value: "NOT_SATISFACTORY", text: "Not satisfactory" }
+    ]
+  }) }}
+{% endmacro %}
 
 {% block content %}
-  {{ appBackLink({ href: "/traces/cheds/" ~ ched.id, text: ched.id }) }}
-  <div class="app-title-row">
-    {{ appHeading({ text: "Record a decision" }) }}
-    <span class="app-mono">{{ ched.id }}</span>
-    {{ statusTag(ched.status) }}
-  </div>
+  {{ chedHeader(ched) }}
 
+  {% if decided %}
+    {% call appCard({ classes: "app-result" + (" app-result--rejected" if decided == "REJECTED") }) %}
+      <p><strong>Decision saved.</strong> The status is now {{ statusTag(ched.status) }}</p>
+    {% endcall %}
+  {% endif %}
+
+  {% call chedPart(ched, "II") %}
   <div id="decision-error" hidden>
     {{ appErrorSummary({
       titleText: "The simulator refused the decision",
@@ -17,31 +35,43 @@
     }) }}
   </div>
 
-  {# Each form posts its decision, then returns to the CHED, which shows the new status. #}
-  <div class="app-columns">
-    {% call appCard({ title: { text: "Accept" } }) %}
-      <form method="post" novalidate data-module="app-decision-form"
-        data-action="/traces/api/cheds/{{ ched.id }}/decision" data-done="/traces/cheds/{{ ched.id }}" data-error="decision-error">
-        <input type="hidden" name="decision" value="accept">
-        <p>Sets the status to VALIDATED, with every check satisfactory and the consignment acceptable for free circulation.</p>
-        <div class="app-button-row">
-          {{ appButton({ text: "Accept" }) }}
-        </div>
-      </form>
-    {% endcall %}
+  {# Saves the checks and status, then reloads this page, whose header shows the new status. #}
+  <form method="post" novalidate data-module="app-decision-form"
+    data-action="/traces/api/cheds/{{ ched.id }}/decision" data-done="/traces/cheds/{{ ched.id }}/decision" data-error="decision-error">
+    <div class="app-columns">
+      {% call appCard({ title: { text: "II.3 Documentary check" }, classes: "app-checks" }) %}
+        {{ checkRow("DOCUMENTARY_CHECK", "Carried out") }}
+        {{ checkRow("DOCUMENTARY_CHECK_RESULT", "EU standard") }}
+        {{ checkRow("DOCUMENTARY_CHECK_RESULT_NATIONAL", "National requirements") }}
+      {% endcall %}
 
-    {% call appCard({ title: { text: "Reject" } }) %}
-      <form method="post" novalidate data-module="app-decision-form"
-        data-action="/traces/api/cheds/{{ ched.id }}/decision" data-done="/traces/cheds/{{ ched.id }}" data-error="decision-error">
-        <input type="hidden" name="decision" value="reject">
-        <p>Sets the status to REJECTED, with the checks not satisfactory and the consignment not acceptable.</p>
-        <div class="app-fields">
-          {{ appSelect({ name: "refusalReason", label: { text: "Refusal reason" }, items: items.refusalReasons }) }}
-        </div>
-        <div class="app-button-row">
-          {{ appButton({ text: "Reject", classes: "app-button--warning" }) }}
-        </div>
-      </form>
+      {% call appCard({ title: { text: "II.4 Identity check" }, classes: "app-checks" }) %}
+        {{ checkRow("IDENTITY_CHECK", "Carried out") }}
+        {{ checkRow("IDENTITY_CHECK_RESULT", "Result") }}
+      {% endcall %}
+
+      {% call appCard({ title: { text: "II.5 Physical check" }, classes: "app-checks" }) %}
+        {{ checkRow("PHYSICAL_CHECK", "Carried out") }}
+        {{ checkRow("PHYSICAL_CHECK_RESULT", "Result") }}
+      {% endcall %}
+    </div>
+
+    {% call appCard({ title: { text: "Conclusion" }, classes: "app-checks" }) %}
+      <p>The status follows the checks: any not satisfactory makes it invalid, all satisfactory or not carried out makes it valid. Choosing a status first sets the checks to match.</p>
+      {{ appRadios({
+        name: "status",
+        fieldset: { legend: { text: "Decision" } },
+        value: status,
+        items: [
+          { value: "IN_PROGRESS", html: statusTag("IN_PROGRESS") },
+          { value: "VALIDATED", html: statusTag("VALIDATED") },
+          { value: "REJECTED", html: statusTag("REJECTED") }
+        ]
+      }) }}
+      <div class="app-button-row">
+        {{ appButton({ text: "Save" }) }}
+      </div>
     {% endcall %}
-  </div>
+  </form>
+  {% endcall %}
 {% endblock %}

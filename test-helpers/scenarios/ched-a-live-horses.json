@@ -16,7 +16,7 @@
     "consignorParty": {
       "identifier": "770198",
       "postalAddress": {
-        "countryId": "XI"
+        "countryId": "AF"
       }
     },
     "consigneeParty": {
@@ -37,9 +37,9 @@
             "CN": "0101"
           },
           "originCountry": "AF",
-          "netWeight": {
-            "value": 900,
-            "unitCode": "KGM"
+          "netVolume": {
+            "value": 2,
+            "unitCode": "H87"
           },
           "physicalReferencedLogisticsPackage": {
             "typeCode": "BX",

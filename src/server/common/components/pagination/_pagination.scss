@@ -1,0 +1,49 @@
+@use 'variables' as *;
+
+.app-pagination {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+  margin-top: 16px;
+}
+
+.app-pagination__list {
+  display: flex;
+  gap: 4px;
+  list-style: none;
+}
+
+.app-pagination__link,
+.app-pagination__ellipsis {
+  display: block;
+  min-width: 32px;
+  padding: 4px 10px;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  text-align: center;
+}
+
+.app-pagination__link {
+  text-decoration: none;
+
+  &:hover {
+    background: $app-tint-blue;
+  }
+}
+
+.app-pagination__link--current {
+  border-color: $app-dark-blue;
+  background: $app-dark-blue;
+  color: #ffffff;
+  font-weight: 700;
+
+  &:hover {
+    background: $app-dark-blue;
+    color: #ffffff;
+  }
+}
+
+.app-pagination__ellipsis {
+  color: $app-secondary-text;
+}

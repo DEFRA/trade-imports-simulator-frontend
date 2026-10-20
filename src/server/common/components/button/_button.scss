@@ -1,4 +1,4 @@
-@use "variables" as *;
+@use 'variables' as *;
 
 // Primary is green, as GOV.UK's is.
 .app-button {
@@ -24,6 +24,11 @@
   &:disabled {
     opacity: 0.5;
     cursor: not-allowed;
+  }
+
+  // Setting display would otherwise show a button the page has hidden.
+  &[hidden] {
+    display: none;
   }
 }
 
@@ -67,7 +72,7 @@
     color: $app-dark-blue;
   }
 
-  &[aria-pressed="true"] {
+  &[aria-pressed='true'] {
     border-color: $app-dark-blue;
     background: $app-dark-blue;
     color: #ffffff;

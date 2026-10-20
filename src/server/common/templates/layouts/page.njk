@@ -1,13 +1,17 @@
 {% extends "layouts/base.njk" %}
 
 {# Components imported for every page, as the template did for govuk ones. #}
-{% from "back-link/macro.njk" import appBackLink %}
+{% from "breadcrumbs/macro.njk" import appBreadcrumbs %}
 {% from "button/macro.njk" import appButton %}
 {% from "card/macro.njk" import appCard %}
+{% from "commodity-picker/macro.njk" import appCommodityPicker %}
 {% from "error-summary/macro.njk" import appErrorSummary %}
 {% from "heading/macro.njk" import appHeading %}
 {% from "input/macro.njk" import appInput %}
+{% from "pagination/macro.njk" import appPagination %}
+{% from "radios/macro.njk" import appRadios %}
 {% from "select/macro.njk" import appSelect %}
+{% from "sub-navigation/macro.njk" import appSubNavigation %}
 {% from "summary-list/macro.njk" import appSummaryList %}
 {% from "table/macro.njk" import appTable %}
 {% from "tag/macro.njk" import appTag %}
