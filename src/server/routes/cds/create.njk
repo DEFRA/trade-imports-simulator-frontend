@@ -1,48 +1,18 @@
 {% extends 'layouts/page.njk' %}
 
 {% block content %}
-  {{ appBreadcrumbs({ items: [{ text: "CDS", href: "/cds" }, { text: "Create a declaration" }] }) }}
+  {{ appBreadcrumbs({ items: [{ text: "CDS", href: "/cds" }, { text: "Create a declaration", href: "/cds/declarations/new" }, { text: startName }] }) }}
   {{ appHeading({ text: "Create a declaration", caption: "A clearance request, as CDS sends it to BTMS" }) }}
 
-  {# Step 1: choose a start. Choosing one hides this and shows step 2, the form, filled from it. #}
-  <section class="app-start" id="declaration-start" aria-labelledby="declaration-start-title">
-    <h2 class="app-start__title" id="declaration-start-title">Start from</h2>
-    <div class="app-start__options">
-      <div class="app-start__option">
-        <p class="app-field__label">A new declaration</p>
-        <div class="app-start__buttons">
-          {{ appButton({
-            text: "Blank",
-            type: "button",
-            classes: "app-button--choice",
-            attributes: { "data-start": "blank" }
-          }) }}
-        </div>
-      </div>
-      <p class="app-start__or">or</p>
-      <div class="app-start__option">
-        {{ appSelect({
-          name: "scenario",
-          label: { text: "A scenario" },
-          items: scenarioItems
-        }) }}
-      </div>
-    </div>
-  </section>
-  <script type="application/json" id="start-models">{{ startModels | jsonIsland }}</script>
-
-  <div id="declaration-form-step" hidden>
+  <script type="application/json" id="declaration-model">{{ model | jsonIsland }}</script>
   {% call appCard() %}
     {% set declarationForm = {
       id: "create-declaration",
-      starts: "start-models",
-      startPicker: "declaration-start",
-      step: "declaration-form-step",
+      model: "declaration-model",
       result: "declaration-sent",
       scenarioAction: "/cds/api/scenarios",
       submitText: "Send to BTMS"
     } %}
     {% include "partials/cds/declaration-form.njk" %}
   {% endcall %}
-  </div>
 {% endblock %}

@@ -37,7 +37,7 @@ describe('CDS routes', () => {
 
   // A browser session as the create page starts one: its cookies, and the crumb from the page.
   async function session() {
-    const { $, headers } = await get('/cds/declarations/new')
+    const { $, headers } = await get('/cds/declarations/new?start=blank')
     const cookie = headers['set-cookie'].map((c) => c.split(';')[0]).join('; ')
     return { cookie, crumb: $('meta[name="csrf-token"]').attr('content') }
   }
@@ -103,7 +103,7 @@ describe('CDS routes', () => {
     expect($('.app-empty').text()).toContain('None yet')
   })
 
-  test('Should render the create form with a blank start and the saved scenarios', async () => {
+  test('Should ask for a start: blank, or one of the saved scenarios', async () => {
     simulator.scenarios.set('horses', {
       id: 'horses',
       name: 'Horses',
@@ -111,31 +111,59 @@ describe('CDS routes', () => {
     })
 
     const { statusCode, $ } = await get('/cds/declarations/new')
-    const starts = JSON.parse($('#start-models').text())
 
     expect(statusCode).toBe(statusCodes.ok)
-    expect($('[data-start="blank"]')).toHaveLength(1)
-    expect($('select[name="scenario"] option[value="horses"]').text()).toBe(
-      'Horses'
-    )
-    expect(starts.blank.serviceHeader).toEqual({
+    expect($('a[href="?start=blank"]').text()).toContain('Blank')
+    expect(
+      $('form[method="get"] select[name="start"] option[value="horses"]').text()
+    ).toBe('Horses')
+    expect($('[data-module="app-cds-declaration-form"]')).toHaveLength(0)
+  })
+
+  test('Should fill the form from the blank start, arriving tomorrow', async () => {
+    const { statusCode, $ } = await get('/cds/declarations/new?start=blank')
+    const model = JSON.parse($('#declaration-model').text())
+
+    expect(statusCode).toBe(statusCodes.ok)
+    expect(model.serviceHeader).toEqual({
       sourceSystem: 'CDS',
       destinationSystem: 'ALVS'
     })
-    expect(starts.blank.header).toEqual({
+    expect(model.header).toMatchObject({
       declarationType: 'S',
       declarantId: 'GB999000000001',
       dispatchCountryCode: 'FR',
       goodsLocationCode: 'LGPLGPLGP'
     })
-    expect(starts.horses).toEqual(request)
+    expect(model.header.arrivalDateTime).toBeGreaterThan(Date.now())
+    expect($('.app-breadcrumbs').text()).toContain('Blank')
     expect(
       $('[data-module="app-cds-declaration-form"]').attr('data-scenario-action')
     ).toBe('/cds/api/scenarios')
   })
 
+  test('Should fill the form from a saved scenario, keeping its arrival time', async () => {
+    simulator.scenarios.set('horses', {
+      id: 'horses',
+      name: 'Horses',
+      model: { ...request, header: { ...request.header, arrivalDateTime: 1 } }
+    })
+
+    const { $ } = await get('/cds/declarations/new?start=horses')
+    const model = JSON.parse($('#declaration-model').text())
+
+    expect(model.header.declarationUCR).toBe(request.header.declarationUCR)
+    expect(model.header.arrivalDateTime).toBe(1)
+  })
+
+  test('Should say so when there is no such start', async () => {
+    const { statusCode } = await get('/cds/declarations/new?start=nothing')
+
+    expect(statusCode).toBe(statusCodes.notFound)
+  })
+
   test('Should offer countries for dispatch and for each item, starting blank', async () => {
-    const { $ } = await get('/cds/declarations/new')
+    const { $ } = await get('/cds/declarations/new?start=blank')
     const dispatch = $('select[name="dispatchCountryCode"] option')
     const origin = load($('template[data-cds-item]').html())(
       'select[name="itemOriginCountryCode"] option'
@@ -149,7 +177,7 @@ describe('CDS routes', () => {
   })
 
   test('Should suggest a thousand made-up declarants', async () => {
-    const { $ } = await get('/cds/declarations/new')
+    const { $ } = await get('/cds/declarations/new?start=blank')
     const list = $(`#${$('input[name="declarant"]').attr('list')} option`)
 
     expect(list).toHaveLength(1000)
@@ -158,7 +186,7 @@ describe('CDS routes', () => {
   })
 
   test('Should offer the document codes BTMS acts on', async () => {
-    const { $ } = await get('/cds/declarations/new')
+    const { $ } = await get('/cds/declarations/new?start=blank')
     const codes = $('template[data-cds-document]')
       .html()
       .match(/value="[^"]+"/g)
@@ -168,7 +196,7 @@ describe('CDS routes', () => {
   })
 
   test('Should offer the declaration types, goods locations and procedure codes CDS sent', async () => {
-    const { $ } = await get('/cds/declarations/new')
+    const { $ } = await get('/cds/declarations/new?start=blank')
     const item = load($('template[data-cds-item]').html())
 
     expect(
@@ -187,7 +215,7 @@ describe('CDS routes', () => {
   })
 
   test('Should offer check codes, and the combinations real items carried', async () => {
-    const { $ } = await get('/cds/declarations/new')
+    const { $ } = await get('/cds/declarations/new?start=blank')
     const checks = load($('template[data-cds-check]').html())
     const item = load($('template[data-cds-item]').html())
     const lookups = JSON.parse($('#create-declaration-lookups').text())

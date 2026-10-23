@@ -14,16 +14,9 @@ import {
   toModel
 } from './declaration-model.js'
 import { sendJson } from '../send-json.js'
-import { onStartChosen, readJson, saveScenario } from '../form-starts.js'
+import { readJson, saveScenario } from '../form-starts.js'
 import { CommodityPicker } from '../commodities/commodity-picker.js'
 import { loadTree } from '../commodities/load-tree.js'
-
-// A new declaration's arrival, unless its start says otherwise: this time tomorrow, to the minute.
-function tomorrow() {
-  const date = new Date(Date.now() + 24 * 60 * 60 * 1000)
-  date.setSeconds(0, 0)
-  return date.getTime()
-}
 
 // A select given a value it doesn't offer selects nothing. A request being amended or a scenario
 // may hold a code the list lacks (a country code CDS still uses, say), and the form mustn't drop
@@ -51,7 +44,7 @@ const valuesOf = (root, attribute, names) =>
   )
 
 // The clearance request form, used to create a declaration and to amend one. It fills itself from a
-// request (the start chosen on the create page, or the version being amended) and builds the request
+// request (the start chosen before the create page, or the version being amended) and builds the request
 // back by laying its values over that same request. Items hold their own checks and documents.
 export class DeclarationForm {
   constructor(form) {
@@ -70,10 +63,6 @@ export class DeclarationForm {
     this.mrn = form.dataset.mrn
     this.version = Number(form.dataset.version)
 
-    this.starts = readJson(form.dataset.starts) ?? {}
-    this.picker = document.getElementById(form.dataset.startPicker)
-    onStartChosen(this.picker, (id) => this.start(id))
-
     form
       .querySelector('[data-cds-item-add]')
       .addEventListener('click', () => this.addItem())
@@ -91,19 +80,7 @@ export class DeclarationForm {
     })
 
     this.loadCommodities()
-    const model = readJson(form.dataset.model)
-    if (model) this.load(model)
-  }
-
-  // Step 1 to step 2: fills the form from the chosen start, then swaps the picker for the form.
-  start(id) {
-    const model = structuredClone(this.starts[id])
-    model.header ??= {}
-    model.header.arrivalDateTime ??= tomorrow()
-    this.load(model)
-
-    this.picker.hidden = true
-    document.getElementById(this.form.dataset.step).hidden = false
+    this.load(readJson(form.dataset.model))
   }
 
   load(model) {
@@ -113,8 +90,6 @@ export class DeclarationForm {
       setField(this.form.elements[name], values[name])
     }
     this.dispatch = values.dispatchCountryCode
-    this.items.replaceChildren()
-    this.pickers.clear()
     values.items.forEach((item) => this.addItem(item))
     // A declaration needs an item, so one without starts with an empty one.
     if (!values.items.length) this.addItem()

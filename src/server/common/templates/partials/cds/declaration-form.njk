@@ -4,8 +4,8 @@
   `items` (declarants, the declarant input's suggestions; select options: declarationTypes,
   goodsLocations, procedureCodes, documentCodes, documentStatuses, documentControls, checkCodes,
   combinations, countries; and `lookups`, which the module reads) and `declarationForm`:
-  { id, submitText, result, and either starts, startPicker and step (create) or model, mrn and
-  version (amend: the version being amended) }. With `scenarioAction`, the form can be saved as a
+  { id, submitText, result, model (the id of the request's JSON island), and on the amend page mrn
+  and version (the version being amended) }. With `scenarioAction`, the form can be saved as a
   scenario there. Sending it shows the `result` element, which the module fills in.
 -#}
 <form id="{{ declarationForm.id }}" method="post" novalidate data-module="app-cds-declaration-form"
@@ -13,11 +13,8 @@
   data-commodities="/cds/api/commodities"
   data-lookups="{{ declarationForm.id }}-lookups"
   data-result="{{ declarationForm.result }}"
-  {%- if declarationForm.model %} data-model="{{ declarationForm.model }}"{% endif %}
+  data-model="{{ declarationForm.model }}"
   {%- if declarationForm.mrn %} data-mrn="{{ declarationForm.mrn }}" data-version="{{ declarationForm.version }}"{% endif %}
-  {%- if declarationForm.starts %} data-starts="{{ declarationForm.starts }}"{% endif %}
-  {%- if declarationForm.startPicker %} data-start-picker="{{ declarationForm.startPicker }}"{% endif %}
-  {%- if declarationForm.step %} data-step="{{ declarationForm.step }}"{% endif %}
   {%- if declarationForm.scenarioAction %} data-scenario-action="{{ declarationForm.scenarioAction }}"{% endif %}>
 
   <script type="application/json" id="{{ declarationForm.id }}-lookups">{{ items.lookups | jsonIsland }}</script>

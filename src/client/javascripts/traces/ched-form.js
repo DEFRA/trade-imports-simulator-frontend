@@ -1,6 +1,6 @@
 import { fromModel, quantityOf, toModel } from './ched-model.js'
 import { sendJson } from '../send-json.js'
-import { onStartChosen, readJson, saveScenario } from '../form-starts.js'
+import { readJson, saveScenario } from '../form-starts.js'
 import { CommodityPicker } from '../commodities/commodity-picker.js'
 import { loadTree } from '../commodities/load-tree.js'
 
@@ -15,14 +15,6 @@ const fields = [
 ]
 const lineFields = ['cnCode', 'originCountry', 'quantity', 'unit']
 
-// A new CHED's arrival at the border control post, which the form doesn't show: this time tomorrow,
-// to the minute.
-function tomorrow() {
-  const date = new Date(Date.now() + 24 * 60 * 60 * 1000)
-  date.setSeconds(0, 0)
-  return date.toISOString()
-}
-
 // A select given a value it doesn't offer selects nothing, so fall back to its first option. That
 // is how a blank CHED, which has no values, picks up the form's defaults.
 function setField(field, value) {
@@ -33,8 +25,8 @@ function setField(field, value) {
 }
 
 // The CHED form, used to create and to edit. It fills itself from a control model (the loaded
-// CHED, or the start chosen on the create page) and builds the control model back by laying its
-// values over that same model. On the create page it waits, hidden, for a start to be chosen.
+// CHED, or the start chosen before the create page) and builds the control model back by laying
+// its values over that same model.
 export class ChedForm {
   constructor(form) {
     this.form = form
@@ -42,10 +34,6 @@ export class ChedForm {
     this.lineTemplate = form.querySelector('[data-ched-form-line]')
     this.lineCount = 0
     this.pickers = new Map()
-
-    this.starts = readJson(form.dataset.starts) ?? {}
-    this.picker = document.getElementById(form.dataset.startPicker)
-    onStartChosen(this.picker, (id) => this.start(id))
 
     form
       .querySelector('[data-ched-form-add]')
@@ -66,19 +54,7 @@ export class ChedForm {
       this.submit()
     })
 
-    const model = readJson(form.dataset.model)
-    if (model) this.load(model)
-  }
-
-  // Step 1 to step 2: fills the form from the chosen start, then swaps the picker for the form.
-  start(id) {
-    const model = structuredClone(this.starts[id])
-    model.specifiedConsignment ??= {}
-    model.specifiedConsignment.availabilityDueDateTime ??= tomorrow()
-    this.load(model)
-
-    this.picker.hidden = true
-    document.getElementById(this.form.dataset.step).hidden = false
+    this.load(readJson(form.dataset.model))
   }
 
   load(model) {
@@ -92,10 +68,7 @@ export class ChedForm {
     for (const name of fields) {
       setField(this.form.elements[name], values[name])
     }
-    // Before the lines, so they don't pick up the last start's tree.
     this.loadCommodities(this.base.exchangedDocument?.includedNote?.CHED_TYPE)
-    this.lines.replaceChildren()
-    this.pickers.clear()
     values.lines.forEach((line) => this.addLine(line))
     // A CHED needs a commodity, so one without a line starts with an empty one.
     if (!values.lines.length) this.addLine()
@@ -104,17 +77,12 @@ export class ChedForm {
   // The CN code pickers search the CHED type's commodity tree, which loads while the form is in
   // use. Lines added before it arrives get it here; lines added after get it in addLine.
   async loadCommodities(chedType) {
-    this.chedType = chedType
-    this.tree = undefined
     if (!chedType) return
     try {
-      const tree = await loadTree(
+      this.tree = await loadTree(
         `/traces/api/commodity-trees/${encodeURIComponent(chedType)}`
       )
-      // A start of another type may have been chosen while this tree was on its way.
-      if (this.chedType !== chedType) return
-      this.tree = tree
-      for (const picker of this.pickers.values()) picker.setTree(tree)
+      for (const picker of this.pickers.values()) picker.setTree(this.tree)
     } catch (error) {
       this.showError(`The commodity tree didn't load: ${error.message}`)
     }

@@ -1,3 +1,4 @@
+import Boom from '@hapi/boom'
 import Joi from 'joi'
 
 import {
@@ -113,20 +114,46 @@ export const cdsController = {
   }
 }
 
-// A new declaration starts blank or from a scenario the simulator holds.
+// A new declaration's arrival, unless its start says otherwise: this time tomorrow, to the minute.
+function tomorrow() {
+  const date = new Date(Date.now() + 24 * 60 * 60 * 1000)
+  date.setSeconds(0, 0)
+  return date.getTime()
+}
+
+// A new declaration starts blank or from a scenario the simulator holds. Without a start the page
+// asks for one; with one it's the form, filled from that start.
 export const createDeclarationController = {
-  async handler(_request, h) {
+  options: {
+    validate: { query: Joi.object({ start: Joi.string().trim() }) }
+  },
+  async handler(request, h) {
     const saved = await listScenarios()
+    const { start } = request.query
+
+    if (!start) {
+      return h.view('cds/start', {
+        pageTitle: 'Create a declaration',
+        scenarioItems: [
+          { value: '', text: 'Choose a scenario' },
+          ...saved.map(({ id, name }) => ({ value: id, text: name }))
+        ]
+      })
+    }
+
+    const chosen =
+      start === 'blank'
+        ? { name: 'Blank', model: blankDeclaration() }
+        : saved.find(({ id }) => id === start)
+    if (!chosen) throw Boom.notFound(`There is no scenario ${start}`)
+    const model = structuredClone(chosen.model)
+    model.header ??= {}
+    model.header.arrivalDateTime ??= tomorrow()
+
     return h.view('cds/create', {
       pageTitle: 'Create a declaration',
-      scenarioItems: [
-        { value: '', text: 'Choose a scenario' },
-        ...saved.map(({ id, name }) => ({ value: id, text: name }))
-      ],
-      startModels: Object.fromEntries([
-        ['blank', blankDeclaration()],
-        ...saved.map(({ id, model }) => [id, model])
-      ]),
+      startName: chosen.name,
+      model,
       items: formItems
     })
   }

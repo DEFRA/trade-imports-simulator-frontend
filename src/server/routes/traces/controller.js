@@ -1,3 +1,4 @@
+import Boom from '@hapi/boom'
 import Joi from 'joi'
 
 import {
@@ -86,29 +87,53 @@ export const openChedController = {
   }
 }
 
-// A new CHED starts blank, as one of the types, or from a scenario the stub holds.
+// A new CHED's arrival at the border control post, which the form doesn't show: this time tomorrow,
+// to the minute.
+function tomorrow() {
+  const date = new Date(Date.now() + 24 * 60 * 60 * 1000)
+  date.setSeconds(0, 0)
+  return date.toISOString()
+}
+
+// A new CHED starts blank, as one of the types, or from a scenario the stub holds. Without a start
+// the page asks for one; with one it's the form, filled from that start.
 export const createChedController = {
-  async handler(_request, h) {
+  options: {
+    validate: { query: Joi.object({ start: Joi.string().trim() }) }
+  },
+  async handler(request, h) {
     const [{ chedTypes }, scenarios] = await Promise.all([
       getReferenceData(),
       listScenarios()
     ])
     const blanks = chedTypes.map(({ code }) => ({
       id: `blank-${code}`,
-      text: `CHED-${code}`,
+      name: `CHED-${code}`,
       model: blankChed(code)
     }))
+    const { start } = request.query
+
+    if (!start) {
+      return h.view('traces/start', {
+        pageTitle: 'Create a CHED',
+        blankStarts: blanks,
+        scenarioItems: [
+          { value: '', text: 'Choose a scenario' },
+          ...scenarios.map(({ id, name }) => ({ value: id, text: name }))
+        ]
+      })
+    }
+
+    const chosen = [...blanks, ...scenarios].find(({ id }) => id === start)
+    if (!chosen) throw Boom.notFound(`There is no scenario ${start}`)
+    const model = structuredClone(chosen.model)
+    model.specifiedConsignment ??= {}
+    model.specifiedConsignment.availabilityDueDateTime ??= tomorrow()
 
     return h.view('traces/create', {
       pageTitle: 'Create a CHED',
-      blankStarts: blanks,
-      scenarioItems: [
-        { value: '', text: 'Choose a scenario' },
-        ...scenarios.map(({ id, name }) => ({ value: id, text: name }))
-      ],
-      startModels: Object.fromEntries(
-        [...blanks, ...scenarios].map(({ id, model }) => [id, model])
-      ),
+      startName: chosen.name,
+      model,
       items: await formItems()
     })
   }

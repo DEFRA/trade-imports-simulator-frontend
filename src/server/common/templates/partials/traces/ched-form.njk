@@ -1,17 +1,13 @@
 {#-
   The CHED form, shared by the create and edit pages. The ched-form client module fills it from a
   control model and builds the request. Expects `items` (select options) and `chedForm`:
-  { id, submitText, and either model (the edit page) or starts, startPicker and step (the create
-  page) }. Choosing a start hides the picker and shows the step holding the form. Submitting sends the model as
+  { id, submitText, model (the id of the model's JSON island) }. Submitting sends the model as
   JSON to `action` (by `method`, POST unless set), then goes to `done`, with `{id}` replaced by the
   saved CHED's, or else shows the `result` element.
-  With `scenarioAction`, the form can also be saved as a scenario there, and joins the start picker.
+  With `scenarioAction`, the form can also be saved as a scenario there.
 -#}
 <form id="{{ chedForm.id }}" method="post" novalidate data-module="app-ched-form"
-  {%- if chedForm.model %} data-model="{{ chedForm.model }}"{% endif %}
-  {%- if chedForm.starts %} data-starts="{{ chedForm.starts }}"{% endif %}
-  {%- if chedForm.startPicker %} data-start-picker="{{ chedForm.startPicker }}"{% endif %}
-  {%- if chedForm.step %} data-step="{{ chedForm.step }}"{% endif %}
+  data-model="{{ chedForm.model }}"
   {%- if chedForm.action %} data-action="{{ chedForm.action }}"{% endif %}
   {%- if chedForm.method %} data-method="{{ chedForm.method }}"{% endif %}
   {%- if chedForm.result %} data-result="{{ chedForm.result }}"{% endif %}

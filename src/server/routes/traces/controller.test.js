@@ -168,37 +168,31 @@ describe('TRACES routes', () => {
   })
 
   describe('Create', () => {
-    test('Should offer blank CHED types and scenarios, with the form hidden until one is chosen', async () => {
+    test('Should ask for a start: a blank CHED type or a scenario', async () => {
       const { statusCode, $ } = await get('/traces/cheds/new')
-      const models = JSON.parse($('#start-models').text())
-      const blanks = $('#ched-start [data-start]')
-        .map((_, button) => $(button).attr('data-start'))
-        .get()
-      const options = $('#ched-start select option')
-        .map((_, option) => $(option).attr('value'))
+      const blanks = $('.app-start a')
+        .map((_, a) => $(a).attr('href'))
         .get()
 
       expect(statusCode).toBe(statusCodes.ok)
-      expect(blanks).toEqual(['blank-A', 'blank-P', 'blank-PP', 'blank-D'])
-      expect(options[0]).toBe('')
-      expect(Object.keys(models)).toEqual([...blanks, ...options.slice(1)])
-      expect($('#ched-start').closest('form')).toHaveLength(0)
-      expect($('#ched-form-step').attr('hidden')).toBeDefined()
-      expect($('#ched-form-step form#create-ched')).toHaveLength(1)
-      expect($('form#create-ched').attr('data-action')).toBe(
-        '/traces/api/cheds'
-      )
+      expect(blanks).toEqual([
+        '?start=blank-A',
+        '?start=blank-P',
+        '?start=blank-PP',
+        '?start=blank-D'
+      ])
+      expect(
+        $('form[method="get"] select[name="start"] option').first().val()
+      ).toBe('')
+      expect($('form#create-ched')).toHaveLength(0)
     })
 
-    test('Should present creating as Part I, and go to the new CHED once created', async () => {
+    test('Should present creating as Part I', async () => {
       const { $ } = await get('/traces/cheds/new')
 
       expect($('.app-breadcrumbs a').attr('href')).toBe('/traces')
       expect($('.app-heading__caption').text()).toContain('Part I')
       expect($('.app-heading__caption').text()).toContain('the operator')
-      expect($('form#create-ched').attr('data-done')).toBe(
-        '/traces/cheds/{id}?created=true'
-      )
     })
 
     test("Should offer the stub's scenarios, by name", async () => {
@@ -209,10 +203,9 @@ describe('TRACES routes', () => {
       })
 
       const { $ } = await get('/traces/cheds/new')
-      const models = JSON.parse($('#start-models').text())
 
       expect(
-        $('#ched-start select option')
+        $('select[name="start"] option')
           .map((_, option) => $(option).text())
           .get()
       ).toEqual([
@@ -223,10 +216,43 @@ describe('TRACES routes', () => {
         'CHED-P: milk',
         'CHED-PP: navel oranges'
       ])
-      expect(models['a-saved-one']).toEqual(liveHorses)
+    })
+
+    test('Should fill the form from a scenario, arriving tomorrow, and go to the new CHED once created', async () => {
+      const { statusCode, $ } = await get(
+        '/traces/cheds/new?start=ched-a-live-horses'
+      )
+      const model = JSON.parse($('#ched-model').text())
+
+      expect(statusCode).toBe(statusCodes.ok)
+      expect(model.exchangedDocument).toEqual(liveHorses.exchangedDocument)
+      expect(
+        new Date(model.specifiedConsignment.availabilityDueDateTime).getTime()
+      ).toBeGreaterThan(Date.now())
+      expect($('.app-breadcrumbs').text()).toContain('CHED-A: live horses')
+      expect($('form#create-ched').attr('data-action')).toBe(
+        '/traces/api/cheds'
+      )
+      expect($('form#create-ched').attr('data-done')).toBe(
+        '/traces/cheds/{id}?created=true'
+      )
       expect($('form#create-ched').attr('data-scenario-action')).toBe(
         '/traces/api/scenarios'
       )
+    })
+
+    test('Should start a blank CHED of the type chosen', async () => {
+      const { $ } = await get('/traces/cheds/new?start=blank-P')
+      const model = JSON.parse($('#ched-model').text())
+
+      expect(model.exchangedDocument.includedNote.CHED_TYPE).toBe('P')
+      expect($('.app-breadcrumbs').text()).toContain('CHED-P')
+    })
+
+    test('Should say so when there is no such start', async () => {
+      const { statusCode } = await get('/traces/cheds/new?start=nothing')
+
+      expect(statusCode).toBe(statusCodes.notFound)
     })
 
     test('Should save a scenario to the stub', async () => {
@@ -258,7 +284,7 @@ describe('TRACES routes', () => {
     })
 
     test('Should leave CHED type and status out of the form', async () => {
-      const { $ } = await get('/traces/cheds/new')
+      const { $ } = await get('/traces/cheds/new?start=blank-A')
 
       expect($('[name="chedType"], [name="status"]')).toHaveLength(0)
     })
