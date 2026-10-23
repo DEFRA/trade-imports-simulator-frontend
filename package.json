@@ -72,7 +72,6 @@
     "@defra/hapi-connect": "1.0.1",
     "@vitest/coverage-v8": "4.1.11",
     "cheerio": "1.2.0",
-    "csv-parse": "7.0.3",
     "eslint": "9.39.5",
     "husky": "9.1.7",
     "neostandard": "0.13.0",

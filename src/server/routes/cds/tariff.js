@@ -1,8 +1,8 @@
 import { readFile } from 'node:fs/promises'
 
 // The UK Trade Tariff's commodity codes, for the declaration form's commodity picker, as the
-// picker's tree: [code, description, pickable, children]. scripts/build-tariff.js builds the file
-// from the tariff's CSV download.
+// picker's tree: [code, description, pickable, children]. Built once from the tariff's commodities
+// report CSV (uk-tariff-2021-01-01--v4.0.1632).
 const file = new URL('../../data/uk-tariff-commodities.json', import.meta.url)
 
 let json
