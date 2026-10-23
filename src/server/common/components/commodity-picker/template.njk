@@ -1,0 +1,29 @@
+{#-
+  A CN code picker: { id, name, label, value, attributes }, with label shaped as appInput's.
+  The commodity-picker client module renders an autocomplete into the input slot and keeps the
+  chosen code in the hidden input, which carries `attributes`. Browse stays disabled until the
+  module has the CHED type's commodity tree.
+-#}
+{% from "macros/attributes.njk" import appAttributes %}
+{% from "button/macro.njk" import appButton %}
+{% set id = params.id or params.name %}
+<div class="app-field app-commodity-picker" data-commodity-picker>
+  {% if params.label %}
+  <label class="app-field__label {{- ' ' ~ params.label.classes if params.label.classes }}" for="{{ id }}">
+    {{- params.label.html | safe if params.label.html else params.label.text -}}
+  </label>
+  {% endif %}
+  <div class="app-commodity-picker__row">
+    <div class="app-commodity-picker__input" data-commodity-picker-input data-id="{{ id }}"></div>
+    {{ appButton({
+      html: 'Browse<span class="app-visually-hidden"> commodities</span>',
+      type: "button",
+      classes: "app-button--secondary",
+      disabled: true,
+      attributes: { "data-commodity-picker-browse": "" }
+    }) }}
+  </div>
+  <input type="hidden" name="{{ params.name }}"
+    {%- if params.value is defined and params.value !== null %} value="{{ params.value }}"{% endif %} data-commodity-picker-value
+    {{- appAttributes(params.attributes) }}>
+</div>

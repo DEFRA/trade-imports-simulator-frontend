@@ -1,92 +1,50 @@
-{% extends "govuk/template.njk" %}
+{% extends "layouts/base.njk" %}
 
-{# Import GOVUK components globally #}
-{% from "govuk/components/breadcrumbs/macro.njk" import govukBreadcrumbs %}
-{% from "govuk/components/service-navigation/macro.njk" import govukServiceNavigation %}
-
-{# Import custom components globally #}
+{# Components imported for every page, as the template did for govuk ones. #}
+{% from "breadcrumbs/macro.njk" import appBreadcrumbs %}
+{% from "button/macro.njk" import appButton %}
+{% from "card/macro.njk" import appCard %}
+{% from "commodity-picker/macro.njk" import appCommodityPicker %}
+{% from "error-summary/macro.njk" import appErrorSummary %}
 {% from "heading/macro.njk" import appHeading %}
+{% from "input/macro.njk" import appInput %}
+{% from "pagination/macro.njk" import appPagination %}
+{% from "radios/macro.njk" import appRadios %}
+{% from "select/macro.njk" import appSelect %}
+{% from "sub-navigation/macro.njk" import appSubNavigation %}
+{% from "summary-list/macro.njk" import appSummaryList %}
+{% from "table/macro.njk" import appTable %}
+{% from "tag/macro.njk" import appTag %}
 
-{% set mainClasses = "app-main-wrapper" %}
+{% set serviceTitle = "Trade imports simulator" %}
+
+{% block pageTitle %}
+  {{ pageTitle }} | {{ serviceTitle }}
+{% endblock %}
 
 {% block headIcons %}
-  <link rel="icon" sizes="48x48" href="{{ getAssetPath("node_modules/govuk-frontend/dist/govuk/assets/images/favicon.ico") }}">
-  <link rel="icon" sizes="any" href="{{ getAssetPath("node_modules/govuk-frontend/dist/govuk/assets/images/favicon.svg") }}" type="image/svg+xml" >
-  <link rel="mask-icon" href="{{ getAssetPath("node_modules/govuk-frontend/dist/govuk/assets/images/govuk-icon-mask.svg") }}" color="{{ themeColor }}">
-  <link rel="apple-touch-icon" href="{{ getAssetPath("node_modules/govuk-frontend/dist/govuk/assets/images/govuk-icon-180.png") }}">
-  <link rel="manifest" href="{{ getAssetPath("node_modules/govuk-frontend/dist/govuk/assets/manifest.json") }}">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect width='16' height='16' rx='3' fill='%23003078'/%3E%3C/svg%3E">
 {% endblock %}
 
 {% block head %}
-  {% if cookiesPolicy.analytics %}
-    {% include "../partials/google-tag-manager/head-content.njk" %}
-  {% endif %}
-
+  {# Client modules send this as X-CSRF-Token when they post JSON. #}
+  <meta name="csrf-token" content="{{ crumb }}">
   <link href="{{ getAssetPath('src/client/stylesheets/application.scss') }}" rel="stylesheet">
 {% endblock %}
 
-
-{% block bodyStart %}
-  {# Show banner only if user hasn't made a choice yet #}
-  {% if not cookiesPolicy.confirmed %}
-    {% include "../partials/cookies/banner.njk" %}
-  {% endif %}
-
-  {# Only load GTM when user has accepted analytics cookies #}
-  {% if cookiesPolicy.analytics %}
-    {% include "../partials/google-tag-manager/body-content.njk" %}
-  {% endif %}
-{% endblock %}
-
 {% block header %}
-  {# serviceName being used in govukHeader will be @deprecated in v6. It has moved to govukServiceNavigation - https://github.com/alphagov/govuk-frontend/blob/main/CHANGELOG.md#move-service-name-and-navigation-links-from-the-govuk-header-to-service-navigation-component #}
-  {{ govukHeader({
-    homepageUrl: "https://www.gov.uk/",
-    classes: "app-header",
-    containerClasses: "govuk-width-container",
-    serviceName: serviceName,
-    serviceUrl: serviceUrl,
-    useTudorCrown: true
-  }) }}
-
-  {{ govukServiceNavigation({
-    navigation: navigation
-  }) }}
-{% endblock %}
-
-{% block pageTitle %}
-  {{ pageTitle }} | {{ serviceName }}
-{% endblock %}
-
-{% block beforeContent %}
-  {% if breadcrumbs.length > 1 %}
-    {{ govukBreadcrumbs({
-      items: breadcrumbs
-    }) }}
-  {% endif %}
-{% endblock %}
-
-{% block content %}{% endblock %}
-
-{% block footer %}
-  {{ govukFooter({
-    meta: {
-      items: [
-        {
-          href: "https://www.gov.uk/help/privacy-notice",
-          text: "Privacy"
-        },
-        {
-          href: "/cookies",
-          text: "Cookies"
-        },
-        {
-          href: "https://www.gov.uk/help/accessibility-statement",
-          text: "Accessibility statement"
-        }
-      ]
-    }
-  }) }}
+  <header class="app-header">
+    <a class="app-header__title" href="{{ serviceUrl }}">{{ serviceTitle }}</a>
+    <nav aria-label="Simulators">
+      <ul class="app-header__nav">
+        {% for item in navigation %}
+        <li>
+          <a class="app-header__link" href="{{ item.href }}" {%- if item.current %} aria-current="page"{% endif %}>{{ item.text }}</a>
+        </li>
+        {% endfor %}
+      </ul>
+    </nav>
+  </header>
 {% endblock %}
 
 {% block bodyEnd %}

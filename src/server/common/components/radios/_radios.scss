@@ -1,0 +1,37 @@
+@use 'variables' as *;
+
+.app-radios {
+  margin: 0;
+  padding: 0;
+  border: none;
+}
+
+.app-radios__items {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 16px;
+}
+
+.app-radios__item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+
+  &:has(:disabled) {
+    color: $app-secondary-text;
+    cursor: default;
+  }
+}
+
+.app-radios__input {
+  width: 16px;
+  height: 16px;
+  margin: 0;
+  accent-color: $app-blue;
+
+  &:focus-visible {
+    outline: 3px solid $app-focus;
+    outline-offset: 1px;
+  }
+}

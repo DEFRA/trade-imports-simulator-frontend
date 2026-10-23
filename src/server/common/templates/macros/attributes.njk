@@ -1,0 +1,4 @@
+{#- Renders an attributes object as HTML attributes, as govukAttributes does for govuk components. -#}
+{% macro appAttributes(attributes) -%}
+  {%- for name, value in attributes %} {{ name }}="{{ value }}"{% endfor -%}
+{%- endmacro %}

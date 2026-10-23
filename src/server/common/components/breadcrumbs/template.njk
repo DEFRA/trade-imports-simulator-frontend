@@ -1,0 +1,14 @@
+{#- Same params as govukBreadcrumbs. The last item is the current page, so it takes no href. -#}
+<nav class="app-breadcrumbs {{- ' ' ~ params.classes if params.classes }}" aria-label="Breadcrumb">
+  <ol class="app-breadcrumbs__list">
+    {% for item in params.items %}
+    <li class="app-breadcrumbs__item">
+      {%- if item.href -%}
+      <a href="{{ item.href }}">{{ item.html | safe if item.html else item.text }}</a>
+      {%- else -%}
+      <span aria-current="page">{{ item.html | safe if item.html else item.text }}</span>
+      {%- endif -%}
+    </li>
+    {% endfor %}
+  </ol>
+</nav>

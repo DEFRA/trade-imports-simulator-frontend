@@ -1,0 +1,53 @@
+@use 'variables' as *;
+
+.app-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 4px;
+  font-size: 13px;
+
+  thead th {
+    padding: 6px 10px;
+    background: $app-blue;
+    color: #ffffff;
+    font-size: 12px;
+    font-weight: 600;
+    text-align: left;
+    white-space: nowrap;
+  }
+
+  td,
+  tbody th {
+    padding: 6px 10px;
+    border-bottom: 1px solid $app-row-border;
+    text-align: left;
+    vertical-align: top;
+  }
+
+  tbody th {
+    font-weight: 600;
+  }
+
+  tr:nth-child(even) td,
+  tr:nth-child(even) th {
+    background: $app-row-stripe;
+  }
+
+  tr:last-child td,
+  tr:last-child th {
+    border-bottom: none;
+  }
+}
+
+.app-table__caption {
+  margin-bottom: 4px;
+  font-weight: 600;
+  text-align: left;
+}
+
+// Two classes, so it beats the head and body cells' left alignment above.
+.app-table .app-table__cell--numeric {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}

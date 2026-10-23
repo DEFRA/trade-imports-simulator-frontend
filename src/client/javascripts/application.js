@@ -1,17 +1,16 @@
-import {
-  createAll,
-  Button,
-  Checkboxes,
-  ErrorSummary,
-  Radios,
-  SkipLink
-} from 'govuk-frontend'
-import cookies from './cookies.js'
+import { ChedForm } from './traces/ched-form.js'
+import { DecisionForm } from './traces/decision-form.js'
+import { DeclarationForm } from './cds/declaration-form.js'
+import { FinalisationForm } from './cds/finalisation-form.js'
 
-cookies.init()
+// Behaviour is attached by data-module, as govuk-frontend's createAll does.
+const modules = {
+  'app-ched-form': (element) => new ChedForm(element),
+  'app-decision-form': (element) => new DecisionForm(element),
+  'app-cds-declaration-form': (element) => new DeclarationForm(element),
+  'app-cds-finalisation-form': (element) => new FinalisationForm(element)
+}
 
-createAll(Button)
-createAll(Checkboxes)
-createAll(ErrorSummary)
-createAll(Radios)
-createAll(SkipLink)
+for (const element of document.querySelectorAll('[data-module]')) {
+  modules[element.dataset.module]?.(element)
+}

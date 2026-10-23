@@ -1,0 +1,90 @@
+{#-
+  The CHED form, shared by the create and edit pages. The ched-form client module fills it from a
+  control model and builds the request. Expects `items` (select options) and `chedForm`:
+  { id, submitText, model (the id of the model's JSON island) }. Submitting sends the model as
+  JSON to `action` (by `method`, POST unless set), then goes to `done`, with `{id}` replaced by the
+  saved CHED's, or else shows the `result` element.
+  With `scenarioAction`, the form can also be saved as a scenario there.
+-#}
+<form id="{{ chedForm.id }}" method="post" novalidate data-module="app-ched-form"
+  data-model="{{ chedForm.model }}"
+  {%- if chedForm.action %} data-action="{{ chedForm.action }}"{% endif %}
+  {%- if chedForm.method %} data-method="{{ chedForm.method }}"{% endif %}
+  {%- if chedForm.result %} data-result="{{ chedForm.result }}"{% endif %}
+  {%- if chedForm.done %} data-done="{{ chedForm.done }}"{% endif %}
+  {%- if chedForm.scenarioAction %} data-scenario-action="{{ chedForm.scenarioAction }}"{% endif %}>
+
+  <div data-ched-form-error hidden>
+    {{ appErrorSummary({
+      titleText: "The simulator refused it",
+      descriptionHtml: '<span data-ched-form-error-detail></span>'
+    }) }}
+  </div>
+
+  <fieldset class="app-form-body">
+  <legend class="app-visually-hidden">CHED details</legend>
+
+  <h3>Declaration</h3>
+  <div class="app-fields">
+    {{ appSelect({ name: "purpose", label: { text: "Purpose" }, items: items.purposes }) }}
+    {{ appSelect({ name: "goodsCertifiedAs", label: { text: "Goods certified as" }, items: items.goodsCertifiedAs }) }}
+  </div>
+
+  <h3>Consignment</h3>
+  <div class="app-fields">
+    {{ appSelect({ name: "bcp", label: { text: "Border control post" }, items: items.borderControlPosts }) }}
+    {{ appSelect({ name: "consignor", label: { text: "Consignor" }, items: items.operators }) }}
+    {{ appSelect({ name: "consignee", label: { text: "Consignee" }, items: items.operators }) }}
+    {{ appSelect({ name: "exportCountry", label: { text: "Export country" }, items: items.countries }) }}
+    {{ appSelect({ name: "importCountry", label: { text: "Import country" }, items: items.countries }) }}
+  </div>
+
+  <h3>Commodities</h3>
+  <table class="app-table app-lines">
+    <thead>
+      <tr>
+        <th scope="col">CN code</th>
+        <th scope="col">Origin</th>
+        {# Volume or Weight, set by the client module from the CHED type. #}
+        <th scope="col" data-ched-form-quantity-heading>Quantity</th>
+        <th scope="col">Unit</th>
+        <th scope="col"><span class="app-visually-hidden">Actions</span></th>
+      </tr>
+    </thead>
+    <tbody data-ched-form-lines></tbody>
+  </table>
+  <template data-ched-form-line>
+    <tr>
+      <td>{{ appCommodityPicker({ id: "line-__INDEX__-cnCode", name: "cnCode", label: { text: "CN code", classes: "app-visually-hidden" }, attributes: { "data-line-field": "cnCode" } }) }}</td>
+      <td>{{ appSelect({ id: "line-__INDEX__-originCountry", name: "originCountry", label: { text: "Origin", classes: "app-visually-hidden" }, items: items.lineCountries, attributes: { "data-line-field": "originCountry" } }) }}</td>
+      <td>{{ appInput({ id: "line-__INDEX__-quantity", name: "quantity", inputmode: "decimal", label: { text: "Quantity", classes: "app-visually-hidden" }, attributes: { "data-line-field": "quantity" } }) }}</td>
+      {# Options come from the CHED type: the client module fills them. #}
+      <td>{{ appSelect({ id: "line-__INDEX__-unit", name: "unit", label: { text: "Unit", classes: "app-visually-hidden" }, items: [], attributes: { "data-line-field": "unit" } }) }}</td>
+      <td>{{ appButton({ text: "Remove", type: "button", classes: "app-button--link", attributes: { "data-ched-form-remove": "" } }) }}</td>
+    </tr>
+  </template>
+
+  <div class="app-button-row">
+    {{ appButton({ text: "Add line", type: "button", classes: "app-button--secondary", attributes: { "data-ched-form-add": "" } }) }}
+  </div>
+
+  <div class="app-button-row">
+    {{ appButton({ text: chedForm.submitText, attributes: { "data-ched-form-submit": "" } }) }}
+  </div>
+
+  {% if chedForm.scenarioAction %}
+  {# Not a form of its own: a form can't nest, and the scenario is this form's model. #}
+  <div class="app-save-scenario">
+    {{ appInput({
+      name: "scenarioName",
+      label: { text: "Save as a scenario" },
+      hint: { text: "Saving under an existing scenario's name replaces it." },
+      classes: "app-input--scenario-name",
+      attributes: { "data-scenario-name": "" }
+    }) }}
+    {{ appButton({ text: "Save scenario", type: "button", classes: "app-button--secondary", attributes: { "data-scenario-save": "" } }) }}
+    <p class="app-save-scenario__status" role="status" data-scenario-status></p>
+  </div>
+  {% endif %}
+  </fieldset>
+</form>

@@ -1,2 +1,25 @@
-// Example custom CSS variables
-$app-light-grey: #f8f8f8;
+// The trade-traces-poc palette, so the simulator and the POC's XSLT views read as one tool.
+// Values are GOV.UK colours, but the type, spacing and components are deliberately not GDS.
+
+$app-dark-blue: #003078;
+$app-blue: #1d70b8;
+$app-green: #00703c;
+$app-dark-green: #005a30;
+$app-red: #d4351c;
+$app-dark-red: #942514;
+$app-orange: #f47738;
+$app-focus: #ffdd00;
+
+$app-text: #1a1a1a;
+$app-secondary-text: #6b6b6b;
+$app-muted-text: #555555;
+$app-page-background: #f4f6f8;
+$app-panel-background: #ffffff;
+$app-panel-border: #d3d3d3;
+$app-input-border: #b1b4b6;
+$app-row-border: #e8e8e8;
+$app-row-stripe: #f9f9f9;
+$app-tint-blue: #f0f4fa;
+
+$app-code-text: #5a1f00;
+$app-code-background: #fff4f0;

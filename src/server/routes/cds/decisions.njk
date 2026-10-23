@@ -1,0 +1,29 @@
+{% extends 'layouts/page.njk' %}
+
+{% from "partials/cds/declaration-header.njk" import declarationHeader, declarationTab with context %}
+{% from "partials/cds/declaration-replies.njk" import declarationReplies %}
+
+{% block content %}
+  {{ declarationHeader(declaration) }}
+
+  {% call declarationTab(declaration, "decisions") %}
+    <p class="app-part-intro">What BTMS sent back to CDS about each version: a decision on its checks,
+      or the errors it refused it with.</p>
+
+    <div class="app-title-row">
+      <h2 class="app-heading__title">Version {{ latest.version }}</h2>
+      <span class="app-muted">Sent {{ latest.sent }}</span>
+    </div>
+    {{ declarationReplies(latest) }}
+
+    {% if earlier | length %}
+      <h2 class="app-heading__title">Earlier versions</h2>
+      {% for version in earlier %}
+        <details class="app-cds-version">
+          <summary>Version {{ version.version }} <span class="app-muted">sent {{ version.sent }} · {{ version.latestReply }}</span></summary>
+          {{ declarationReplies(version) }}
+        </details>
+      {% endfor %}
+    {% endif %}
+  {% endcall %}
+{% endblock %}

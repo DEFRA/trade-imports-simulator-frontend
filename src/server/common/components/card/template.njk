@@ -1,0 +1,8 @@
+{#- A white panel. No govuk twin: govukSummaryList's `card` is the nearest. Body comes from the call block. -#}
+{% from "macros/attributes.njk" import appAttributes %}
+<section class="app-card {{- ' ' ~ params.classes if params.classes }}" {{- appAttributes(params.attributes) }}>
+  {% if params.title %}
+  <h2 class="app-card__title">{{ params.title.html | safe if params.title.html else params.title.text }}</h2>
+  {% endif %}
+  {{ caller() if caller }}
+</section>

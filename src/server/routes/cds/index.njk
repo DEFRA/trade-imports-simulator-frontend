@@ -1,0 +1,43 @@
+{% extends 'layouts/page.njk' %}
+
+{% block content %}
+  {{ appHeading({
+    text: "Declarations",
+    caption: "Every declaration in the CDS simulator, most recently sent first."
+  }) }}
+
+  <div class="app-toolbar">
+    {{ appButton({ text: "Create a declaration", href: "/cds/declarations/new" }) }}
+    <form class="app-toolbar__form" method="get" action="/cds/declarations/open">
+      {{ appInput({ name: "mrn", label: { text: "Open a declaration by MRN" }, spellcheck: false, classes: "app-input--reference" }) }}
+      {{ appButton({ text: "Open", classes: "app-button--blue" }) }}
+    </form>
+  </div>
+
+  {% call appCard() %}
+    {% if declarations | length %}
+      {% set rows = [] %}
+      {% for declaration in declarations %}
+        {% set base = "/cds/declarations/" ~ declaration.mrn %}
+        {% set _ = rows.push([
+          { html: '<a href="' ~ base ~ '" class="app-mono">' ~ declaration.mrn ~ '</a>' },
+          { text: declaration.version },
+          { text: declaration.sent },
+          { html: '<span class="app-links"><a href="' ~ base ~ '/decisions">Decisions</a><a href="' ~ base ~ '/amend">Amend</a><a href="' ~ base ~ '/finalise">Finalise</a></span>' }
+        ]) %}
+      {% endfor %}
+      {{ appTable({
+        head: [{ text: "MRN" }, { text: "Version" }, { text: "Sent" }, { html: '<span class="app-visually-hidden">Actions</span>' }],
+        rows: rows
+      }) }}
+    {% elif pastFirstPage %}
+      <p class="app-empty">No more declarations.</p>
+    {% else %}
+      <p class="app-empty">None yet. Declarations you create appear here.</p>
+    {% endif %}
+
+    {% if pagination %}
+      {{ appPagination(pagination) }}
+    {% endif %}
+  {% endcall %}
+{% endblock %}

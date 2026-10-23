@@ -1,0 +1,105 @@
+@use 'variables' as *;
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: $app-font;
+  font-size: 14px;
+  line-height: 1.4;
+  color: $app-text;
+  background: $app-page-background;
+}
+
+h1 {
+  font-size: 22px;
+  color: $app-dark-blue;
+  margin-bottom: 4px;
+}
+
+h2 {
+  font-size: 16px;
+  color: $app-dark-blue;
+  margin: 24px 0 8px;
+  border-bottom: 2px solid $app-dark-blue;
+  padding-bottom: 4px;
+}
+
+h3 {
+  font-size: 14px;
+  color: $app-blue;
+  margin: 16px 0 6px;
+}
+
+h2:first-child,
+h3:first-child {
+  margin-top: 0;
+}
+
+p + p {
+  margin-top: 8px;
+}
+
+a {
+  color: $app-blue;
+  font-weight: 500;
+  text-decoration: none;
+
+  &:hover {
+    text-decoration: underline;
+  }
+}
+
+:focus-visible {
+  outline: 3px solid $app-focus;
+  outline-offset: 0;
+}
+
+code,
+.app-code {
+  font-family: $app-mono-font;
+  font-size: 12px;
+  color: $app-code-text;
+  background: $app-code-background;
+  padding: 1px 5px;
+  border-radius: 3px;
+}
+
+pre {
+  font-family: $app-mono-font;
+  font-size: 12px;
+  line-height: 1.45;
+  background: #fbfbfb;
+  border: 1px solid #e0e0e0;
+  border-radius: 4px;
+  padding: 10px 12px;
+  overflow-x: auto;
+}
+
+.app-mono {
+  font-family: $app-mono-font;
+  font-size: 13px;
+}
+
+.app-muted {
+  color: $app-muted-text;
+}
+
+.app-empty {
+  color: #aaaaaa;
+  font-style: italic;
+}
+
+.app-visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}

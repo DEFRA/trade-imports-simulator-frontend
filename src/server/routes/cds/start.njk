@@ -1,0 +1,24 @@
+{% extends 'layouts/page.njk' %}
+
+{% block content %}
+  {{ appBreadcrumbs({ items: [{ text: "CDS", href: "/cds" }, { text: "Create a declaration" }] }) }}
+  {{ appHeading({ text: "Create a declaration", caption: "A clearance request, as CDS sends it to BTMS" }) }}
+
+  {# Each start opens the create form, filled from it. #}
+  <section class="app-start" aria-labelledby="declaration-start-title">
+    <h2 class="app-start__title" id="declaration-start-title">Start from</h2>
+    <div class="app-start__options">
+      <div class="app-start__option">
+        <p class="app-field__label">A new declaration</p>
+        <div class="app-start__buttons">
+          {{ appButton({ text: "Blank", href: "?start=blank", classes: "app-button--choice" }) }}
+        </div>
+      </div>
+      <p class="app-start__or">or</p>
+      <form class="app-start__option" method="get">
+        {{ appSelect({ name: "start", label: { text: "A scenario" }, items: scenarioItems }) }}
+        {{ appButton({ text: "Start", classes: "app-button--secondary" }) }}
+      </form>
+    </div>
+  </section>
+{% endblock %}

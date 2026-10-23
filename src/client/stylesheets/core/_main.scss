@@ -1,9 +1,19 @@
-@use "govuk-frontend" as *;
-
-// Example namespaced custom element style CSS classes
+@use 'variables' as *;
 
 .app-main-wrapper {
   display: block;
-  padding-top: govuk-spacing(4);
-  padding-bottom: govuk-spacing(3);
+  padding: $app-gutter;
+}
+
+.app-width-container {
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.app-main-wrapper,
+.app-header {
+  @media (max-width: 640px) {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
 }

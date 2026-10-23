@@ -1,0 +1,21 @@
+{% extends 'layouts/page.njk' %}
+
+{% from "partials/traces/ched-header.njk" import chedParts %}
+
+{% block content %}
+  {{ appBreadcrumbs({ items: [{ text: "CHEDs", href: "/traces" }, { text: "Create a CHED", href: "/traces/cheds/new" }, { text: startName }] }) }}
+  {{ appHeading({ text: "Create a CHED", caption: "Part I, the declaration. " ~ chedParts["I"] }) }}
+
+  <script type="application/json" id="ched-model">{{ model | jsonIsland }}</script>
+  {% call appCard() %}
+    {% set chedForm = {
+      id: "create-ched",
+      model: "ched-model",
+      action: "/traces/api/cheds",
+      done: "/traces/cheds/{id}?created=true",
+      scenarioAction: "/traces/api/scenarios",
+      submitText: "Create CHED"
+    } %}
+    {% include "partials/traces/ched-form.njk" %}
+  {% endcall %}
+{% endblock %}
