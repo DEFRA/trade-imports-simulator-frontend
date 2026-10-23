@@ -12,8 +12,13 @@ export async function sendJson(url, method, body) {
   const json = await response.json().catch(() => ({}))
 
   if (!response.ok) {
-    throw new Error(
-      json.detail ?? json.message ?? `The request failed (${response.status}).`
+    throw Object.assign(
+      new Error(
+        json.detail ??
+          json.message ??
+          `The request failed (${response.status}).`
+      ),
+      { status: response.status }
     )
   }
   return json

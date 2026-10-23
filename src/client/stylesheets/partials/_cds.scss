@@ -1,0 +1,145 @@
+@use 'variables' as *;
+
+// Each item of a declaration is a panel of its own, holding its documents.
+.app-cds-item {
+  min-width: 0;
+  margin: 0 0 16px;
+  padding: 12px 16px;
+  border: 1px solid $app-row-border;
+  border-radius: 6px;
+  background: $app-row-stripe;
+
+  .app-lines {
+    margin-top: 12px;
+  }
+}
+
+// Checks and documents side by side; checks have two short columns, documents four.
+.app-cds-item__lines {
+  display: grid;
+  grid-template-columns: minmax(0, 3fr) minmax(0, 7fr);
+  gap: 0 16px;
+  align-items: start;
+
+  @media (max-width: 640px) {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  // Line up the Remove links with the controls beside them.
+  td {
+    vertical-align: middle;
+  }
+
+  // The reference takes the room the code columns don't need.
+  .app-input--reference {
+    width: 100%;
+  }
+}
+
+// Shrinks a column to its content, leaving the slack to the others.
+.app-lines__fit {
+  width: 1%;
+}
+
+.app-cds-item__remove {
+  justify-content: flex-end;
+}
+
+.app-cds-item__title {
+  padding: 0 4px;
+  font-weight: 600;
+}
+
+.app-cds-item__caption {
+  text-align: left;
+  font-weight: 600;
+  padding-bottom: 4px;
+}
+
+// A read-only item panel, on the Request and Decisions tabs, looks the same whatever its heading
+// levels: the Decisions tab nests items a level deeper, under each reply.
+.app-cds-item--read {
+  .app-cds-item__title {
+    margin: 0 0 6px;
+    padding: 0;
+    font-size: 14px;
+    color: $app-blue;
+  }
+
+  .app-cds-item__caption {
+    margin: 12px 0 4px;
+    font-size: 14px;
+    color: $app-text;
+  }
+}
+
+// One row, such as an item's commodity, takes the full width rather than one column of the grid.
+.app-summary-list--single {
+  grid-template-columns: 1fr;
+}
+
+// The commodity picker and procedure code need room for a code and its description.
+.app-cds-item__commodity,
+.app-cds-item__procedure {
+  grid-column: span 2;
+}
+
+// Short codes: a country, a procedure code, a document status.
+.app-input--code,
+.app-select--code {
+  width: 10ch;
+}
+
+.app-input--number {
+  width: 14ch;
+}
+
+// The combination select names checks and documents together, so it gets the item's full width.
+.app-cds-item__combination {
+  margin-top: 12px;
+
+  .app-select {
+    max-width: 100%;
+  }
+}
+
+// An earlier version of a request, folded away under the latest.
+.app-cds-version {
+  margin-bottom: 12px;
+
+  summary {
+    cursor: pointer;
+    font-weight: 600;
+    margin-bottom: 8px;
+  }
+}
+
+// What BTMS sent back about a version: each reply edged in blue for a decision, red for a refusal,
+// holding item panels like the Request tab's.
+.app-cds-reply {
+  margin-bottom: 16px;
+  padding-left: 12px;
+  border-left: 4px solid $app-blue;
+
+  .app-cds-item:last-child {
+    margin-bottom: 0;
+  }
+
+  // The check and its decision stay on one line; the reason takes the rest.
+  td:nth-child(-n + 2) {
+    white-space: nowrap;
+  }
+}
+
+.app-cds-reply--error {
+  border-left-color: $app-red;
+}
+
+.app-cds-reply__title {
+  margin: 0 0 8px;
+  font-size: 16px;
+
+  .app-muted {
+    font-weight: normal;
+  }
+}

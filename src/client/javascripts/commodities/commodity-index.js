@@ -17,10 +17,25 @@ function escapeRegExp(text) {
   return text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
 }
 
+// An entry's text lower-cased, worked out once: the UK tariff has about 17,000 entries to search
+// on every keystroke.
+const lowered = new WeakMap()
+
+function textOf(entry) {
+  let text = lowered.get(entry)
+  if (!text) {
+    text = {
+      description: entry.description.toLowerCase(),
+      path: entry.path.join(' ').toLowerCase()
+    }
+    lowered.set(entry, text)
+  }
+  return text
+}
+
 // How well one word matches an entry, best first: the start of a word in the description, inside
 // the description, the start of a word in the path, inside the path. Undefined means no match.
-function wordRank(word, description, path) {
-  const wordStart = new RegExp(`(^|[^\\p{L}\\p{N}])${escapeRegExp(word)}`, 'u')
+function wordRank({ word, wordStart }, { description, path }) {
   if (wordStart.test(description)) return 0
   if (description.includes(word)) return 1
   if (wordStart.test(path)) return 2
@@ -44,15 +59,17 @@ export function search(entries, query, limit = 20) {
     return [...exact, ...rest].slice(0, limit)
   }
 
-  const words = text.split(/\s+/)
+  const words = text.split(/\s+/).map((word) => ({
+    word,
+    wordStart: new RegExp(`(^|[^\\p{L}\\p{N}])${escapeRegExp(word)}`, 'u')
+  }))
   const ranked = []
   for (const entry of entries) {
     if (!entry.pickable) continue
-    const description = entry.description.toLowerCase()
-    const path = entry.path.join(' ').toLowerCase()
+    const entryText = textOf(entry)
     let rank = 0
     for (const word of words) {
-      const wordScore = wordRank(word, description, path)
+      const wordScore = wordRank(word, entryText)
       if (wordScore === undefined) {
         rank = undefined
         break

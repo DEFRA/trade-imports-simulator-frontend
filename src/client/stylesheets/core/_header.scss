@@ -41,16 +41,6 @@
   }
 }
 
-.app-header__link--disabled {
-  color: #7f97bb;
-  cursor: default;
-
-  &:hover {
-    background: none;
-    color: #7f97bb;
-  }
-}
-
 .app-skip-link {
   position: absolute;
   left: -9999px;

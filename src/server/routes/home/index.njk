@@ -7,25 +7,17 @@
   }) }}
 
   {% call appCard({ classes: "app-simulator-list" }) %}
+    {% set rows = [] %}
+    {% for simulator in simulators %}
+      {% set rows = (rows.push([
+        { html: '<a href="' + simulator.href + '">' + simulator.text + '</a>' } if simulator.enabled else { text: simulator.text },
+        { text: simulator.description },
+        { html: appTag({ text: "Enabled", classes: "app-tag--green" }) if simulator.enabled else appTag({ text: "Disabled", classes: "app-tag--grey" }) }
+      ]), rows) %}
+    {% endfor %}
     {{ appTable({
       head: [{ text: "System" }, { text: "What it does" }, { text: "Status" }],
-      rows: [
-        [
-          { html: '<a href="/traces">TRACES</a>' },
-          { text: "Create, update, accept and reject CHEDs in the TRACES NT simulator." },
-          { html: appTag({ text: "In progress", classes: "app-tag--yellow" }) }
-        ],
-        [
-          { text: "IPAFFS" },
-          { text: "Not built yet." },
-          { html: appTag({ text: "Planned", classes: "app-tag--grey" }) }
-        ],
-        [
-          { text: "CDS" },
-          { text: "Not built yet." },
-          { html: appTag({ text: "Planned", classes: "app-tag--grey" }) }
-        ]
-      ]
+      rows: rows
     }) }}
   {% endcall %}
 {% endblock %}

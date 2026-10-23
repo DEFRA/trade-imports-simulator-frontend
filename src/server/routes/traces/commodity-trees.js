@@ -1,7 +1,5 @@
-import {
-  ControlApiError,
-  getCommodityTree
-} from '#/server/common/clients/certificate-control.js'
+import { getCommodityTree } from '#/server/common/clients/certificate-control.js'
+import { ControlApiError } from '#/server/common/clients/json-api.js'
 import { getReferenceData } from '#/server/common/services/reference-data.js'
 
 // A CHED type's commodity tree, trimmed for the browser's commodity picker. Each node is

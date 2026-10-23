@@ -1,4 +1,5 @@
-import { ControlApiError, getChed } from './certificate-control.js'
+import { getChed } from './certificate-control.js'
+import { ControlApiError } from './json-api.js'
 
 describe('#certificateControl', () => {
   test('Should turn an unreachable simulator into a 502 naming it', async () => {
@@ -40,9 +41,10 @@ describe('#certificateControl', () => {
     const error = await getChed('X').catch((e) => e)
 
     expect(error.status).toBe(502)
-    expect(error.message).toContain("not the stub's JSON")
+    expect(error.message).toContain("not the TRACES simulator's JSON")
     expect(error.message).toContain(
       'TRACES_SIMULATOR_URL (http://localhost:8085)'
     )
+    expect(error.service).toBe('TRACES simulator')
   })
 })

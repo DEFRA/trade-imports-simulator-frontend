@@ -39,11 +39,7 @@
       <ul class="app-header__nav">
         {% for item in navigation %}
         <li>
-          {% if item.href %}
           <a class="app-header__link" href="{{ item.href }}" {%- if item.current %} aria-current="page"{% endif %}>{{ item.text }}</a>
-          {% else %}
-          <span class="app-header__link app-header__link--disabled" title="Not built yet">{{ item.text }}</span>
-          {% endif %}
         </li>
         {% endfor %}
       </ul>

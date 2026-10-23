@@ -1,0 +1,19 @@
+{% extends 'layouts/page.njk' %}
+
+{% block content %}
+  {{ appBreadcrumbs({ items: [{ text: "CDS", href: "/cds" }, { text: mrn, href: "/cds/declarations/" ~ mrn }, { text: "Amend" }] }) }}
+  {{ appHeading({ text: "Amend " ~ mrn, caption: "Version " ~ version ~ " → " ~ (version + 1) }) }}
+
+  <script type="application/json" id="declaration-model">{{ model | jsonIsland }}</script>
+  {% call appCard() %}
+    {% set declarationForm = {
+      id: "amend-declaration",
+      model: "declaration-model",
+      mrn: mrn,
+      version: version,
+      result: "declaration-sent",
+      submitText: "Send version " ~ (version + 1)
+    } %}
+    {% include "partials/cds/declaration-form.njk" %}
+  {% endcall %}
+{% endblock %}

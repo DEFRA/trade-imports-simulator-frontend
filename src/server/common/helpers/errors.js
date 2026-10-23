@@ -1,5 +1,5 @@
 import { statusCodes } from '../constants/status-codes.js'
-import { ControlApiError } from '../clients/certificate-control.js'
+import { ControlApiError } from '../clients/json-api.js'
 
 function statusCodeMessage(statusCode) {
   switch (statusCode) {
@@ -27,13 +27,18 @@ export function catchAll(request, h) {
     return h.continue
   }
 
-  // The stub refused or couldn't be reached. Its message names what to fix, so show it.
+  // A simulator refused or couldn't be reached. Its message names what to fix, so show it. A record
+  // the simulator lacks is this app's 404 too.
   const fromSimulator = response instanceof ControlApiError
+  const simulatorStatus =
+    response.status === statusCodes.notFound
+      ? statusCodes.notFound
+      : statusCodes.badGateway
   const statusCode = fromSimulator
-    ? statusCodes.badGateway
+    ? simulatorStatus
     : response.output.statusCode
   const errorMessage = fromSimulator
-    ? `The TRACES simulator: ${response.message}`
+    ? `The ${response.service}: ${response.message}`
     : statusCodeMessage(statusCode)
 
   if (statusCode >= statusCodes.internalServerError) {

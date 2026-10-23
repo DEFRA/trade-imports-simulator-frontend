@@ -59,8 +59,8 @@ function selectButton({ code, description }) {
   return button
 }
 
-// A commodity line's CN code: an autocomplete over the CHED type's commodity tree, plus a Browse
-// dialog. The chosen code lives in the hidden input, which is what ChedForm reads.
+// A commodity line's code: an autocomplete over a commodity tree (a CHED type's, or the UK tariff),
+// plus a Browse dialog. The chosen code lives in the hidden input, which is what the forms read.
 export class CommodityPicker {
   constructor(root) {
     this.root = root

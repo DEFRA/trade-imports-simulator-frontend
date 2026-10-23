@@ -66,8 +66,7 @@ describe('context and cache', () => {
               text: 'TRACES',
               href: '/traces'
             },
-            { text: 'IPAFFS' },
-            { text: 'CDS' }
+            { current: false, text: 'CDS', href: '/cds' }
           ],
           serviceName: 'trade-imports-simulator-frontend',
           serviceUrl: '/',
@@ -153,8 +152,7 @@ describe('context and cache', () => {
               text: 'TRACES',
               href: '/traces'
             },
-            { text: 'IPAFFS' },
-            { text: 'CDS' }
+            { current: false, text: 'CDS', href: '/cds' }
           ],
           serviceName: 'trade-imports-simulator-frontend',
           serviceUrl: '/',

@@ -1,0 +1,63 @@
+{% extends 'layouts/page.njk' %}
+
+{% from "partials/cds/declaration-header.njk" import declarationHeader, declarationTab with context %}
+
+{% block content %}
+  {{ declarationHeader(declaration) }}
+
+  {% if finalised %}
+    {% call appCard({ classes: "app-result" }) %}
+      <p><strong>Finalisation sent.</strong> If BTMS refuses it, the reason shows on the
+        <a href="/cds/declarations/{{ declaration.mrn }}/decisions">Decisions</a> tab.</p>
+    {% endcall %}
+  {% endif %}
+
+  {% call declarationTab(declaration, "finalise") %}
+    <p class="app-part-intro">CDS finalises a declaration once its goods are dealt with. BTMS takes a
+      finalisation only for the latest version, so it's for version {{ declaration.version }}.</p>
+
+    <div id="finalisation-error" hidden>
+      {{ appErrorSummary({
+        titleText: "The simulator refused the finalisation",
+        descriptionHtml: '<span data-finalisation-error-detail></span>'
+      }) }}
+    </div>
+
+    {# Sends the choices as JSON, then reloads this page, which lists the finalisation. #}
+    <form method="post" novalidate data-module="app-cds-finalisation-form"
+      data-action="/cds/api/declarations/{{ declaration.mrn }}/finalisations"
+      data-done="/cds/declarations/{{ declaration.mrn }}/finalise" data-error="finalisation-error">
+      <input type="hidden" name="version" value="{{ declaration.version }}">
+      <div class="app-fields">
+        {{ appSelect({ name: "finalState", label: { text: "Final state" }, items: finalStates, value: "0" }) }}
+        {{ appInput({
+          name: "decisionNumber",
+          inputmode: "numeric",
+          label: { text: "Decision number" },
+          classes: "app-input--number",
+          value: decisionNumber
+        }) }}
+        {{ appRadios({
+          name: "manualAction",
+          fieldset: { legend: { text: "Manual release" } },
+          value: "N",
+          items: [{ value: "N", text: "No" }, { value: "Y", text: "Yes" }]
+        }) }}
+      </div>
+      <div class="app-button-row">
+        {{ appButton({ text: "Finalise version " ~ declaration.version }) }}
+      </div>
+    </form>
+
+    <h2 class="app-heading__title">Sent</h2>
+    {% if finalisations | length %}
+      {% set rows = [] %}
+      {% for f in finalisations %}
+        {% set _ = rows.push([{ text: f.version }, { text: f.finalState }, { text: f.manualAction }, { text: f.decisionNumber }, { text: f.sent }]) %}
+      {% endfor %}
+      {{ appTable({ head: [{ text: "Version" }, { text: "Final state" }, { text: "Manual release" }, { text: "Decision" }, { text: "Sent" }], rows: rows }) }}
+    {% else %}
+      <p class="app-empty">None yet.</p>
+    {% endif %}
+  {% endcall %}
+{% endblock %}

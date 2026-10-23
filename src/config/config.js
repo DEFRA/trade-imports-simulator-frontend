@@ -101,11 +101,44 @@ export const config = convict({
     }
   },
   tracesSimulator: {
+    enabled: {
+      doc: 'Serve the TRACES pages and the /poc proxy. Off where the stub fronts real EU acceptance.',
+      format: Boolean,
+      default: false,
+      env: 'TRACES_SIMULATOR_ENABLED'
+    },
     baseUrl: {
       doc: 'The TRACES NT stub, whose control API is under /control. 8085 is where `dotnet run` serves it.',
       format: String,
       default: 'http://localhost:8085',
       env: 'TRACES_SIMULATOR_URL'
+    }
+  },
+  cdsSimulator: {
+    enabled: {
+      doc: 'Serve the CDS pages.',
+      format: Boolean,
+      default: false,
+      env: 'CDS_SIMULATOR_ENABLED'
+    },
+    baseUrl: {
+      doc: 'trade-imports-cds-simulator-api, which stands in for HMRC CDS. 5003 is its port in btms-local-environment.',
+      format: String,
+      default: 'http://localhost:5003',
+      env: 'CDS_SIMULATOR_URL'
+    },
+    clientId: {
+      doc: 'The client the CDS simulator knows this app as (its Acl:Clients), for the endpoints that need Basic auth.',
+      format: String,
+      default: 'Developer',
+      env: 'CDS_SIMULATOR_CLIENT_ID'
+    },
+    secret: {
+      doc: "That client's secret. The default is the simulator's local Developer client.",
+      format: String,
+      default: 'developer-pwd',
+      sensitive: true,
+      env: 'CDS_SIMULATOR_SECRET'
     }
   },
   tracesPoc: {

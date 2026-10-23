@@ -1,12 +1,9 @@
-// One entry per upstream system the simulator stands in for. An entry without an href isn't built yet.
+import { enabledSimulators } from '#/server/common/helpers/simulators.js'
+
 export function buildNavigation(request) {
-  return [
-    {
-      text: 'TRACES',
-      href: '/traces',
-      current: request?.path?.startsWith('/traces') ?? false
-    },
-    { text: 'IPAFFS' },
-    { text: 'CDS' }
-  ]
+  return enabledSimulators().map(({ text, href }) => ({
+    text,
+    href,
+    current: request?.path?.startsWith(href) ?? false
+  }))
 }

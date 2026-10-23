@@ -1,7 +1,8 @@
 import { fromModel, quantityOf, toModel } from './ched-model.js'
 import { sendJson } from '../send-json.js'
-import { CommodityPicker } from './commodity-picker.js'
-import { loadTree } from './commodity-trees.js'
+import { onStartChosen, readJson, saveScenario } from '../form-starts.js'
+import { CommodityPicker } from '../commodities/commodity-picker.js'
+import { loadTree } from '../commodities/load-tree.js'
 
 const fields = [
   'purpose',
@@ -31,11 +32,6 @@ function setField(field, value) {
   }
 }
 
-function readJson(id) {
-  const island = id && document.getElementById(id)
-  return island ? JSON.parse(island.textContent) : undefined
-}
-
 // The CHED form, used to create and to edit. It fills itself from a control model (the loaded
 // CHED, or the start chosen on the create page) and builds the control model back by laying its
 // values over that same model. On the create page it waits, hidden, for a start to be chosen.
@@ -49,13 +45,7 @@ export class ChedForm {
 
     this.starts = readJson(form.dataset.starts) ?? {}
     this.picker = document.getElementById(form.dataset.startPicker)
-    this.picker?.addEventListener('click', (event) => {
-      const button = event.target.closest('[data-start]')
-      if (button) this.start(button.dataset.start)
-    })
-    this.picker?.addEventListener('change', (event) => {
-      if (event.target.value) this.start(event.target.value)
-    })
+    onStartChosen(this.picker, (id) => this.start(id))
 
     form
       .querySelector('[data-ched-form-add]')
@@ -118,7 +108,9 @@ export class ChedForm {
     this.tree = undefined
     if (!chedType) return
     try {
-      const tree = await loadTree(chedType)
+      const tree = await loadTree(
+        `/traces/api/commodity-trees/${encodeURIComponent(chedType)}`
+      )
       // A start of another type may have been chosen while this tree was on its way.
       if (this.chedType !== chedType) return
       this.tree = tree
@@ -216,37 +208,20 @@ export class ChedForm {
     }
   }
 
-  // Saves the form as a scenario in the stub, under an ID made from its name. The arrival time is
-  // left out so the scenario sets it to tomorrow whenever it's used, rather than to a date that has
-  // passed.
-  async saveScenario() {
-    const status = this.form.querySelector('[data-scenario-status]')
-    const name = this.form.querySelector('[data-scenario-name]').value.trim()
-    const id = name
-      .toLowerCase()
-      .replace(/[^a-z0-9]+/g, '-')
-      .replace(/^-|-$/g, '')
-    if (!id) {
-      status.textContent = 'Give the scenario a name.'
-      return
-    }
-    if (this.values().lines.some((line) => !line.cnCode)) {
-      status.textContent = 'Every commodity line needs a CN code.'
-      return
-    }
-
-    const model = this.model()
-    delete model.specifiedConsignment?.availabilityDueDateTime
-    try {
-      const saved = await sendJson(
-        `${this.form.dataset.scenarioAction}/${id}`,
-        'PUT',
-        { name, model }
-      )
-      status.textContent = `Saved scenario "${saved.name}".`
-    } catch (error) {
-      status.textContent = `Not saved: ${error.message}`
-    }
+  // The arrival time is left out so the scenario sets it to tomorrow whenever it's used, rather than
+  // to a date that has passed.
+  saveScenario() {
+    return saveScenario(this.form, {
+      problem: () =>
+        this.values().lines.some((line) => !line.cnCode)
+          ? 'Every commodity line needs a CN code.'
+          : undefined,
+      model: () => {
+        const model = this.model()
+        delete model.specifiedConsignment?.availabilityDueDateTime
+        return model
+      }
+    })
   }
 
   showResult() {

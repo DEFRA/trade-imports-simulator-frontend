@@ -1,8 +1,6 @@
-import Boom from '@hapi/boom'
 import Joi from 'joi'
 
 import {
-  ControlApiError,
   createChed,
   getChed,
   listCheds,
@@ -12,17 +10,12 @@ import {
 } from '#/server/common/clients/certificate-control.js'
 
 import { getReferenceData } from '#/server/common/services/reference-data.js'
+import { apiRoute, relay } from '#/server/common/helpers/api-route.js'
+import { pagination } from '#/server/common/helpers/pagination.js'
+import { selectItems as items } from '#/server/common/helpers/select-items.js'
 import { blankChed } from './blank-ched.js'
 import { applyDecision, checkClauses, decisionStatuses } from './decisions.js'
 import { trimmedTree } from './commodity-trees.js'
-
-function items(list, { blank } = {}) {
-  const options = list.map(({ code, name }) => ({
-    value: code,
-    text: `${code} – ${name}`
-  }))
-  return blank ? [{ value: '', text: '' }, ...options] : options
-}
 
 async function formItems() {
   const lists = await getReferenceData()
@@ -57,49 +50,7 @@ function summarise({ id, accessible, updated, certificate }) {
   }
 }
 
-// Reads a CHED, turning the simulator's 404 into this app's.
-async function findChed(id) {
-  try {
-    return summarise(await getChed(id))
-  } catch (error) {
-    if (error instanceof ControlApiError && error.status === 404) {
-      throw Boom.notFound(error.message)
-    }
-    throw error
-  }
-}
-
-// The stub says only whether another page follows, not how many there are, so the numbers run
-// from 1 to the page after this one: 1 … 4 [5] 6.
-function pagination(page, hasMore) {
-  if (page === 1 && !hasMore) {
-    return undefined
-  }
-  const link = (number) => ({
-    number,
-    href: `/traces?page=${number}`,
-    current: number === page
-  })
-  const last = hasMore ? page + 1 : page
-  const items = [link(1)]
-  if (page > 3) {
-    items.push({ ellipsis: true })
-  }
-  for (let number = Math.max(2, page - 1); number <= last; number++) {
-    items.push(link(number))
-  }
-  return {
-    landmarkLabel: 'CHED pages',
-    previous:
-      page > 1
-        ? { href: `/traces?page=${page - 1}`, labelText: 'newer CHEDs' }
-        : undefined,
-    next: hasMore
-      ? { href: `/traces?page=${page + 1}`, labelText: 'older CHEDs' }
-      : undefined,
-    items
-  }
-}
+const findChed = async (id) => summarise(await getChed(id))
 
 // Every CHED in the simulator, newest first, a page at a time.
 export const chedListController = {
@@ -115,7 +66,12 @@ export const chedListController = {
       pageTitle: 'CHEDs',
       cheds: items.map(summarise),
       pastFirstPage: page > 1,
-      pagination: pagination(page, hasMore)
+      pagination: pagination(page, hasMore, {
+        path: '/traces',
+        landmarkLabel: 'CHED pages',
+        newer: 'newer CHEDs',
+        older: 'older CHEDs'
+      })
     })
   }
 }
@@ -155,28 +111,6 @@ export const createChedController = {
       ),
       items: await formItems()
     })
-  }
-}
-
-// The JSON routes the pages' client modules call. Each passes the stub's answer back, problems
-// included, so a page shows the simulator's own message.
-const apiRoute = (validate) => ({
-  tags: ['api'],
-  plugins: { crumb: { restful: true } },
-  validate
-})
-
-async function relay(h, act, code = 200) {
-  try {
-    return h.response(await act()).code(code)
-  } catch (error) {
-    if (error instanceof ControlApiError) {
-      return h
-        .response(error.problem ?? { detail: error.message })
-        .type('application/problem+json')
-        .code(error.status)
-    }
-    throw error
   }
 }
 
