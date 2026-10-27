@@ -1,0 +1,24 @@
+@use 'variables' as *;
+
+.app-error-summary {
+  margin-bottom: 16px;
+  padding: 10px 14px;
+  border-left: 4px solid $app-red;
+  border-radius: 0 4px 4px 0;
+  background: #fff8f7;
+}
+
+.app-error-summary__title {
+  display: block;
+  margin-bottom: 2px;
+  color: $app-dark-red;
+}
+
+.app-error-summary__list {
+  margin: 6px 0 0 18px;
+  font-size: 13px;
+
+  a {
+    color: $app-dark-red;
+  }
+}

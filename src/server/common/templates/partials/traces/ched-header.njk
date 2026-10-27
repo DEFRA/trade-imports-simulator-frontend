@@ -1,0 +1,43 @@
+{#-
+  The two CHED pages. chedHeader is the top: where the CHED sits and what it is. chedPart wraps the
+  page's form in a tab for each part, the current one opening into the panel the form sits in. The
+  parts are TRACES's own: in the real world the operator completes Part I and an official at the
+  border control post completes Part II, so each panel says who it is for.
+-#}
+{% from "breadcrumbs/macro.njk" import appBreadcrumbs %}
+{% from "sub-navigation/macro.njk" import appSubNavigation %}
+{% from "partials/traces/status-tag.njk" import statusTag %}
+{% from "partials/traces/ched-links.njk" import chedLinks with context %}
+
+{% set chedParts = {
+  "I": "Completed by the operator responsible for the consignment, usually the importer or their agent, before it arrives.",
+  "II": "Completed by an official at the border control post, once the consignment has been checked."
+} %}
+
+{% macro chedHeader(ched) %}
+  {{ appBreadcrumbs({ items: [{ text: "CHEDs", href: "/traces" }, { text: ched.id }] }) }}
+
+  <div class="app-title-row">
+    <h1 class="app-mono app-ched-title">{{ ched.id }}</h1>
+    <span class="app-muted">CHED-{{ ched.type }}</span>
+    {{ statusTag(ched.status) }}
+    {{ chedLinks(ched.id) }}
+  </div>
+
+{% endmacro %}
+
+{% macro chedPart(ched, part) %}
+  <div class="app-ched-part">
+    {{ appSubNavigation({
+      label: "CHED parts",
+      items: [
+        { html: "Part I <span class='app-muted'>Declaration</span>", href: "/traces/cheds/" ~ ched.id, active: part == "I" },
+        { html: "Part II <span class='app-muted'>Decision</span>", href: "/traces/cheds/" ~ ched.id ~ "/decision", active: part == "II" }
+      ]
+    }) }}
+    <div class="app-ched-part__panel">
+      <p class="app-part-intro">{{ chedParts[part] }}</p>
+      {{ caller() }}
+    </div>
+  </div>
+{% endmacro %}

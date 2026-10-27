@@ -100,6 +100,70 @@ export const config = convict({
       env: 'LOG_REDACT'
     }
   },
+  tracesSimulator: {
+    enabled: {
+      doc: 'Serve the TRACES pages and the /poc proxy. Off where the stub fronts real EU acceptance.',
+      format: Boolean,
+      default: false,
+      env: 'TRACES_SIMULATOR_ENABLED'
+    },
+    baseUrl: {
+      doc: 'The TRACES NT stub, whose control API is under /control. 8085 is where `dotnet run` serves it.',
+      format: String,
+      default: 'http://localhost:8085',
+      env: 'TRACES_SIMULATOR_URL'
+    }
+  },
+  cdsSimulator: {
+    enabled: {
+      doc: 'Serve the CDS pages.',
+      format: Boolean,
+      default: false,
+      env: 'CDS_SIMULATOR_ENABLED'
+    },
+    baseUrl: {
+      doc: 'trade-imports-cds-simulator-api, which stands in for HMRC CDS. 5003 is its port in btms-local-environment.',
+      format: String,
+      default: 'http://localhost:5003',
+      env: 'CDS_SIMULATOR_URL'
+    },
+    clientId: {
+      doc: 'The client the CDS simulator knows this app as (its Acl:Clients), for the endpoints that need Basic auth.',
+      format: String,
+      default: 'Developer',
+      env: 'CDS_SIMULATOR_CLIENT_ID'
+    },
+    secret: {
+      doc: "That client's secret. The default is the simulator's local Developer client.",
+      format: String,
+      default: 'developer-pwd',
+      sensitive: true,
+      env: 'CDS_SIMULATOR_SECRET'
+    }
+  },
+  tracesPoc: {
+    baseUrl: {
+      doc: 'trade-traces-poc, whose XSLT views this app proxies under /poc. 8090 is its local port.',
+      format: String,
+      default: 'http://localhost:8090',
+      env: 'TRACES_POC_URL'
+    },
+    apiKey: {
+      doc: 'The CDP developer key the POC sits behind when deployed. Sent as x-api-key, so users never need it.',
+      format: String,
+      default: '',
+      sensitive: true,
+      env: 'TRACES_POC_API_KEY'
+    }
+  },
+  btmsPortal: {
+    url: {
+      doc: 'btms-portal-frontend as a browser reaches it, for links to a CHED in BTMS. Not called by this app.',
+      format: String,
+      default: 'http://localhost:3000',
+      env: 'BTMS_PORTAL_URL'
+    }
+  },
   httpProxy: {
     doc: 'HTTP Proxy',
     format: String,
@@ -213,50 +277,6 @@ export const config = convict({
       format: String,
       default: 'x-cdp-request-id',
       env: 'TRACING_HEADER'
-    }
-  },
-  cookieConsent: {
-    name: {
-      doc: 'Name of cookie that stores the user consent preference',
-      format: String,
-      default: `${encodeURIComponent('trade-imports-simulator-frontend')}_policy`
-    },
-    policy: {
-      clearInvalid: {
-        doc: 'Clear the cookie if it fails validation (e.g. bad JSON)',
-        format: Boolean,
-        default: true
-      },
-      encoding: {
-        doc: 'Hapi cookie encoding — base64json automatically serialises objects',
-        format: String,
-        default: 'base64json'
-      },
-      isSameSite: {
-        doc: 'SameSite attribute — Lax allows the cookie on top-level navigations',
-        format: String,
-        default: 'Lax'
-      },
-      isSecure: {
-        doc: 'Secure flag — only send cookie over HTTPS in production',
-        format: Boolean,
-        default: isProduction
-      }
-    },
-    config: {
-      ttl: {
-        doc: 'Cookie time-to-live in milliseconds (1 year)',
-        format: 'nat',
-        default: 1000 * 60 * 60 * 24 * 365
-      }
-    }
-  },
-  googleAnalytics: {
-    googleTagManagerKey: {
-      doc: 'Google Tag Manager container ID (e.g. GTM-XXXXXXXX)',
-      format: String,
-      default: '',
-      env: 'GOOGLE_TAG_MANAGER_KEY'
     }
   }
 })

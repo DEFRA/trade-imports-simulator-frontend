@@ -1,0 +1,5 @@
+{#- Same params as govukTag. Colour modifiers as govuk's: app-tag--green, --grey, --red, --yellow. Default is blue. -#}
+{% from "macros/attributes.njk" import appAttributes %}
+<strong class="app-tag {{- ' ' ~ params.classes if params.classes }}" {{- appAttributes(params.attributes) }}>
+  {{- params.html | safe if params.html else params.text -}}
+</strong>

@@ -1,0 +1,95 @@
+@use 'variables' as *;
+
+// Primary is green, as GOV.UK's is.
+.app-button {
+  display: inline-block;
+  padding: 6px 14px;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  background: $app-green;
+  color: #ffffff;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1.4;
+  white-space: nowrap;
+  cursor: pointer;
+
+  &:hover {
+    background: $app-dark-green;
+    color: #ffffff;
+    text-decoration: none;
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  // Setting display would otherwise show a button the page has hidden.
+  &[hidden] {
+    display: none;
+  }
+}
+
+.app-button--blue {
+  background: $app-blue;
+
+  &:hover {
+    background: $app-dark-blue;
+  }
+}
+
+.app-button--secondary {
+  background: #e8e8e8;
+  color: #383838;
+
+  &:hover {
+    background: #d8d8d8;
+    color: #383838;
+  }
+}
+
+.app-button--warning {
+  background: transparent;
+  border-color: $app-red;
+  color: $app-red;
+
+  &:hover {
+    background: #fce8e4;
+    color: $app-red;
+  }
+}
+
+.app-button--choice {
+  border-color: $app-blue;
+  background: $app-panel-background;
+  color: $app-blue;
+  font-weight: 600;
+
+  &:hover {
+    background: $app-tint-blue;
+    color: $app-dark-blue;
+  }
+
+  &[aria-pressed='true'] {
+    border-color: $app-dark-blue;
+    background: $app-dark-blue;
+    color: #ffffff;
+  }
+}
+
+.app-button--link {
+  padding: 0;
+  border: none;
+  background: none;
+  color: $app-blue;
+  font-size: 12px;
+  text-decoration: underline;
+
+  &:hover {
+    background: none;
+    color: $app-dark-blue;
+    text-decoration: underline;
+  }
+}

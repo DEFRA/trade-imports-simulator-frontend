@@ -1,0 +1,18 @@
+{% extends 'layouts/page.njk' %}
+
+{% block content %}
+  {{ appBreadcrumbs({ items: [{ text: "CDS", href: "/cds" }, { text: "Create a declaration", href: "/cds/declarations/new" }, { text: startName }] }) }}
+  {{ appHeading({ text: "Create a declaration", caption: "A clearance request, as CDS sends it to BTMS" }) }}
+
+  <script type="application/json" id="declaration-model">{{ model | jsonIsland }}</script>
+  {% call appCard() %}
+    {% set declarationForm = {
+      id: "create-declaration",
+      model: "declaration-model",
+      result: "declaration-sent",
+      scenarioAction: "/cds/api/scenarios",
+      submitText: "Send to BTMS"
+    } %}
+    {% include "partials/cds/declaration-form.njk" %}
+  {% endcall %}
+{% endblock %}

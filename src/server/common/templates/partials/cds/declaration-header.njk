@@ -1,0 +1,36 @@
+{#-
+  A declaration's pages. declarationHeader is the top: the MRN, its latest version and a link to it in
+  BTMS. declarationTab wraps the page in a tab for each part: the request CDS sent, what BTMS sent
+  back, and the finalisation that ends it. Expects `declaration`: { mrn, version }.
+-#}
+{% from "breadcrumbs/macro.njk" import appBreadcrumbs %}
+{% from "sub-navigation/macro.njk" import appSubNavigation %}
+
+{% macro declarationHeader(declaration) %}
+  {{ appBreadcrumbs({ items: [{ text: "CDS", href: "/cds" }, { text: declaration.mrn }] }) }}
+
+  <div class="app-title-row">
+    <h1 class="app-mono app-ched-title">{{ declaration.mrn }}</h1>
+    <span class="app-muted">Version {{ declaration.version }}</span>
+    <span class="app-links">
+      <a href="{{ btmsPortalUrl }}/search-result?searchTerm={{ declaration.mrn | urlencode }}" target="_blank" rel="noopener">BTMS <span aria-hidden="true">↗</span><span class="app-visually-hidden"> (opens in a new tab)</span></a>
+    </span>
+  </div>
+{% endmacro %}
+
+{% macro declarationTab(declaration, tab) %}
+  {% set base = "/cds/declarations/" ~ declaration.mrn %}
+  <div class="app-ched-part">
+    {{ appSubNavigation({
+      label: "Declaration parts",
+      items: [
+        { html: "Request <span class='app-muted'>from CDS</span>", href: base, active: tab == "request" },
+        { html: "Decisions <span class='app-muted'>from BTMS</span>", href: base ~ "/decisions", active: tab == "decisions" },
+        { html: "Finalise", href: base ~ "/finalise", active: tab == "finalise" }
+      ]
+    }) }}
+    <div class="app-ched-part__panel">
+      {{ caller() }}
+    </div>
+  </div>
+{% endmacro %}

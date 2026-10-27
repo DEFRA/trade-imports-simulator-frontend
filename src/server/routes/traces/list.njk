@@ -1,0 +1,53 @@
+{% extends 'layouts/page.njk' %}
+
+{% from "partials/traces/status-tag.njk" import statusTag %}
+{% from "partials/traces/ched-links.njk" import chedLinks with context %}
+
+{% block content %}
+  {{ appHeading({
+    text: "CHEDs",
+    caption: "Every CHED in the TRACES NT simulator, most recently updated first."
+  }) }}
+
+  <div class="app-toolbar">
+    <span class="app-links">
+      {{ appButton({ text: "Create a CHED", href: "/traces/cheds/new" }) }}
+      <a href="/poc/simulator/ched/find" target="_blank" rel="noopener">Find CHEDs in the simulator <span aria-hidden="true">↗</span><span class="app-visually-hidden"> (opens in a new tab)</span></a>
+    </span>
+    <form class="app-toolbar__form" method="get" action="/traces/cheds">
+      {{ appInput({ name: "id", label: { text: "Open a CHED by reference" }, spellcheck: false, classes: "app-input--reference" }) }}
+      {{ appButton({ text: "Open", classes: "app-button--blue" }) }}
+    </form>
+  </div>
+
+  {% call appCard() %}
+    {% if cheds | length %}
+      {% set rows = [] %}
+      {% for ched in cheds %}
+        {% set status = statusTag(ched.status) %}
+        {% if not ched.accessible %}
+          {% set status = status ~ " " ~ appTag({ text: "Not accessible", classes: "app-tag--grey" }) %}
+        {% endif %}
+        {% set _ = rows.push([
+          { html: '<a href="/traces/cheds/' ~ ched.id ~ '" class="app-mono">' ~ ched.id ~ '</a>' },
+          { text: "CHED-" ~ ched.type },
+          { html: status },
+          { text: ched.updated | formatDate("d MMM yyyy HH:mm") },
+          { html: '<span class="app-links"><a href="/traces/cheds/' ~ ched.id ~ '/decision">Decision</a>' ~ chedLinks(ched.id) ~ '</span>' }
+        ]) %}
+      {% endfor %}
+      {{ appTable({
+        head: [{ text: "Reference" }, { text: "Type" }, { text: "Status" }, { text: "Updated" }, { html: '<span class="app-visually-hidden">Actions</span>' }],
+        rows: rows
+      }) }}
+    {% elif pastFirstPage %}
+      <p class="app-empty">No more CHEDs.</p>
+    {% else %}
+      <p class="app-empty">None yet. CHEDs you create appear here.</p>
+    {% endif %}
+
+    {% if pagination %}
+      {{ appPagination(pagination) }}
+    {% endif %}
+  {% endcall %}
+{% endblock %}

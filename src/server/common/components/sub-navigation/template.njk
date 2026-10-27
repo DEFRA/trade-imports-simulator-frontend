@@ -1,0 +1,15 @@
+{#-
+  Same params as mojSubNavigation: { label, items: [{ text or html, href, active }] }. Each item is a
+  page of its own, so these are links, not in-page tabs.
+-#}
+<nav class="app-sub-navigation {{- ' ' ~ params.classes if params.classes }}" aria-label="{{ params.label | default('Secondary navigation') }}">
+  <ul class="app-sub-navigation__list">
+    {% for item in params.items %}
+    <li class="app-sub-navigation__item">
+      <a class="app-sub-navigation__link" href="{{ item.href }}" {%- if item.active %} aria-current="page"{% endif %}>
+        {{- item.html | safe if item.html else item.text -}}
+      </a>
+    </li>
+    {% endfor %}
+  </ul>
+</nav>

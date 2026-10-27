@@ -1,0 +1,11 @@
+{#-
+  Links to a CHED elsewhere: its certificate and quantity console in trade-traces-poc (proxied under
+  /poc), and its search result in BTMS. New tab: none of them link back to this app.
+-#}
+{% macro chedLinks(id) %}
+  <span class="app-links">
+    <a href="/poc/simulator/ched/{{ id }}" target="_blank" rel="noopener">View certificate <span aria-hidden="true">↗</span><span class="app-visually-hidden"> (opens in a new tab)</span></a>
+    <a href="/poc/simulator/ched/{{ id }}/quantities" target="_blank" rel="noopener">Quantities <span aria-hidden="true">↗</span><span class="app-visually-hidden"> (opens in a new tab)</span></a>
+    <a href="{{ btmsPortalUrl }}/search-result?searchTerm={{ id | urlencode }}" target="_blank" rel="noopener">BTMS <span aria-hidden="true">↗</span><span class="app-visually-hidden"> (opens in a new tab)</span></a>
+  </span>
+{% endmacro %}

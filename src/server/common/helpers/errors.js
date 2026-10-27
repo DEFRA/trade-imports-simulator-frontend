@@ -1,4 +1,5 @@
 import { statusCodes } from '../constants/status-codes.js'
+import { ControlApiError } from '../clients/json-api.js'
 
 function statusCodeMessage(statusCode) {
   switch (statusCode) {
@@ -18,12 +19,27 @@ function statusCodeMessage(statusCode) {
 export function catchAll(request, h) {
   const { response } = request
 
-  if (!('isBoom' in response)) {
+  // JSON routes (tagged api) answer errors in JSON, not with the HTML error page.
+  if (
+    !('isBoom' in response) ||
+    request.route?.settings.tags?.includes('api')
+  ) {
     return h.continue
   }
 
-  const statusCode = response.output.statusCode
-  const errorMessage = statusCodeMessage(statusCode)
+  // A simulator refused or couldn't be reached. Its message names what to fix, so show it. A record
+  // the simulator lacks is this app's 404 too.
+  const fromSimulator = response instanceof ControlApiError
+  const simulatorStatus =
+    response.status === statusCodes.notFound
+      ? statusCodes.notFound
+      : statusCodes.badGateway
+  const statusCode = fromSimulator
+    ? simulatorStatus
+    : response.output.statusCode
+  const errorMessage = fromSimulator
+    ? `The ${response.service}: ${response.message}`
+    : statusCodeMessage(statusCode)
 
   if (statusCode >= statusCodes.internalServerError) {
     request.logger.error(response?.stack)

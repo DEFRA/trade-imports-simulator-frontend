@@ -1,0 +1,56 @@
+{#-
+  One version of a clearance request, read-only, as summariseRequest (routes/cds/summary.js) builds it:
+  { rows, items: [{ number, commodity, commodityDescription, procedure, origin, netMass,
+  supplementaryUnits, documents, checks }] }.
+-#}
+{% from "summary-list/macro.njk" import appSummaryList %}
+{% from "table/macro.njk" import appTable %}
+
+{% macro declarationSummary(summary) %}
+  {{ appSummaryList({ rows: summary.rows }) }}
+
+  {% for item in summary.items %}
+    <section class="app-cds-item app-cds-item--read">
+      <h3 class="app-cds-item__title">Item {{ item.number }}</h3>
+      {{ appSummaryList({ rows: [
+        { key: { text: "Commodity" }, value: { html: '<span class="app-mono">' ~ (item.commodity | escape) ~ '</span> ' ~ (item.commodityDescription | escape) } },
+        { key: { text: "Procedure" }, value: { text: item.procedure } },
+        { key: { text: "Origin" }, value: { text: item.origin } },
+        { key: { text: "Net mass (kg)" }, value: { text: item.netMass } },
+        { key: { text: "Supplementary units" }, value: { text: item.supplementaryUnits } }
+      ] }) }}
+
+      <div class="app-cds-item__lines">
+        <div>
+          <h4 class="app-cds-item__caption">Checks</h4>
+          {% if item.checks | length %}
+            {% set checkRows = [] %}
+            {% for check in item.checks %}
+              {% set _ = checkRows.push([{ text: check.code }, { text: check.department }]) %}
+            {% endfor %}
+            {{ appTable({ head: [{ text: "Code" }, { text: "Department" }], rows: checkRows }) }}
+          {% else %}
+            <p class="app-empty">None</p>
+          {% endif %}
+        </div>
+        <div>
+          <h4 class="app-cds-item__caption">Documents</h4>
+          {% if item.documents | length %}
+            {% set documentRows = [] %}
+            {% for document in item.documents %}
+              {% set _ = documentRows.push([
+                { text: document.code },
+                { html: '<span class="app-mono">' ~ (document.reference | escape) ~ '</span>' },
+                { text: document.status },
+                { text: document.control }
+              ]) %}
+            {% endfor %}
+            {{ appTable({ head: [{ text: "Code" }, { text: "Reference" }, { text: "Status" }, { text: "Control" }], rows: documentRows }) }}
+          {% else %}
+            <p class="app-empty">None</p>
+          {% endif %}
+        </div>
+      </div>
+    </section>
+  {% endfor %}
+{% endmacro %}

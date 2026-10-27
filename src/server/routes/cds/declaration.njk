@@ -1,0 +1,29 @@
+{% extends 'layouts/page.njk' %}
+
+{% from "partials/cds/declaration-header.njk" import declarationHeader, declarationTab with context %}
+{% from "partials/cds/declaration-summary.njk" import declarationSummary %}
+
+{% block content %}
+  {{ declarationHeader(declaration) }}
+
+  {% call declarationTab(declaration, "request") %}
+    <div class="app-title-row">
+      <h2 class="app-heading__title">Version {{ latest.version }}</h2>
+      <span class="app-muted">Sent {{ latest.sent }}</span>
+      <span class="app-links">
+        {{ appButton({ text: "Amend: send version " ~ (latest.version + 1), href: "/cds/declarations/" ~ declaration.mrn ~ "/amend" }) }}
+      </span>
+    </div>
+    {{ declarationSummary(latest) }}
+
+    {% if earlier | length %}
+      <h2 class="app-heading__title">Earlier versions</h2>
+      {% for version in earlier %}
+        <details class="app-cds-version">
+          <summary>Version {{ version.version }} <span class="app-muted">sent {{ version.sent }}</span></summary>
+          {{ declarationSummary(version) }}
+        </details>
+      {% endfor %}
+    {% endif %}
+  {% endcall %}
+{% endblock %}

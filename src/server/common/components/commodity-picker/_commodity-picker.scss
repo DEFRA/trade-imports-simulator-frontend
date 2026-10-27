@@ -1,0 +1,254 @@
+@use 'pkg:accessible-autocomplete';
+@use 'variables' as *;
+
+// accessible-autocomplete's own styles are GOV.UK's: 2px black borders and 19px type. These scoped
+// rules win on specificity and make it match app-input.
+.app-commodity-picker__row {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+}
+
+.app-commodity-picker__input {
+  flex: 1;
+  min-width: 280px;
+}
+
+.app-commodity-picker {
+  .autocomplete__input,
+  .autocomplete__hint {
+    height: auto;
+    padding: 5px 8px;
+    border: 1px solid $app-input-border;
+    border-radius: 4px;
+    font-family: $app-mono-font;
+    font-size: 13px;
+    line-height: 1.4;
+  }
+
+  .autocomplete__input {
+    background: transparent;
+    color: $app-text;
+  }
+
+  .autocomplete__hint {
+    background: #ffffff;
+    color: $app-secondary-text;
+  }
+
+  .autocomplete__input--focused {
+    border-color: $app-text;
+    box-shadow: none;
+    outline: 3px solid $app-focus;
+  }
+
+  .autocomplete__menu {
+    width: max-content;
+    min-width: 100%;
+    max-width: min(640px, 90vw);
+    max-height: 320px;
+    margin-top: 2px;
+    border: 1px solid $app-panel-border;
+    border-radius: 4px;
+    box-shadow: 0 4px 12px rgb(0, 0, 0, 0.15);
+    font-size: 13px;
+  }
+
+  .autocomplete__option {
+    padding: 5px 8px;
+    border-color: $app-row-border;
+    font-size: 13px;
+    line-height: 1.4;
+  }
+
+  .autocomplete__option--odd {
+    background: $app-row-stripe;
+  }
+
+  .autocomplete__option--focused,
+  .autocomplete__option:hover {
+    border-color: $app-tint-blue;
+    background: $app-tint-blue;
+    color: $app-text;
+  }
+
+  .autocomplete__option--no-results {
+    background: #ffffff;
+    color: $app-muted-text;
+    font-style: italic;
+  }
+}
+
+// A code the CHED type's tree doesn't know: shown as it is, flagged.
+.app-commodity-picker--unknown .autocomplete__input {
+  border-color: $app-orange;
+  background: #fff8f2;
+}
+
+// One suggestion or search result: the code, the description, and where it sits in the tree.
+.app-commodity-option__code {
+  padding: 0 4px;
+  border-radius: 3px;
+  background: $app-code-background;
+  color: $app-code-text;
+  font-family: $app-mono-font;
+  font-size: 12px;
+}
+
+.app-commodity-option__path {
+  display: block;
+  color: $app-secondary-text;
+  font-size: 11px;
+}
+
+// The Browse dialog: one per page, built when first opened.
+.app-commodity-browser {
+  width: min(760px, calc(100vw - 32px));
+  // Fixed, so the dialog doesn't jump about as the filter narrows the list.
+  height: min(80vh, 720px);
+  margin: auto;
+  padding: 0;
+  border: 1px solid $app-panel-border;
+  border-radius: 6px;
+  background: $app-panel-background;
+  color: $app-text;
+  box-shadow: 0 8px 30px rgb(0, 0, 0, 0.25);
+
+  &[open] {
+    display: flex;
+    flex-direction: column;
+  }
+
+  &::backdrop {
+    background: rgb(0, 0, 0, 0.4);
+  }
+}
+
+.app-commodity-browser__header,
+.app-commodity-browser__footer {
+  padding: 12px 16px;
+}
+
+.app-commodity-browser__header {
+  border-bottom: 1px solid $app-row-border;
+}
+
+.app-commodity-browser__title {
+  margin: 0 0 10px;
+}
+
+.app-commodity-browser__body {
+  flex: 1;
+  min-height: 200px;
+  overflow-y: auto;
+  padding: 8px 16px;
+}
+
+.app-commodity-browser__status {
+  margin-bottom: 6px;
+  color: $app-muted-text;
+  font-size: 12px;
+
+  &:empty {
+    display: none;
+  }
+}
+
+.app-commodity-browser__footer {
+  display: flex;
+  justify-content: flex-end;
+  border-top: 1px solid $app-row-border;
+}
+
+.app-commodity-tree,
+.app-commodity-tree ul,
+.app-commodity-browser__results {
+  list-style: none;
+}
+
+.app-commodity-tree ul {
+  margin-left: 10px;
+  padding-left: 10px;
+  border-left: 1px solid $app-row-border;
+}
+
+.app-commodity-tree__row,
+.app-commodity-browser__result {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 3px 0;
+}
+
+.app-commodity-browser__result {
+  padding: 5px 0;
+  border-bottom: 1px solid $app-row-border;
+}
+
+.app-commodity-tree__toggle,
+.app-commodity-tree__leaf,
+.app-commodity-browser__result-text {
+  flex: 1;
+  min-width: 0;
+  font-size: 13px;
+  text-align: left;
+}
+
+.app-commodity-tree__toggle,
+.app-commodity-tree__leaf {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+
+  > .app-commodity-option__code {
+    flex: none;
+  }
+}
+
+.app-commodity-tree__toggle {
+  padding: 2px 4px;
+  border: none;
+  border-radius: 3px;
+  background: none;
+  color: inherit;
+  font-family: inherit;
+  cursor: pointer;
+
+  &::before {
+    content: '▸';
+    flex: none;
+    width: 1em;
+    color: $app-blue;
+  }
+
+  &[aria-expanded='true']::before {
+    content: '▾';
+  }
+
+  &:hover {
+    background: $app-tint-blue;
+  }
+}
+
+.app-commodity-tree__leaf {
+  padding: 2px 4px 2px calc(10px + 1em);
+}
+
+// Labels group the codes beneath them but have no code of their own.
+.app-commodity-tree__node--label > .app-commodity-tree__row > :first-child {
+  color: $app-secondary-text;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+.app-commodity-tree__select {
+  padding: 2px 10px;
+  font-size: 12px;
+}
+
+// Browse sits beside the input, so it takes the input's height.
+.app-commodity-picker__row > .app-button {
+  padding: 5px 12px;
+}

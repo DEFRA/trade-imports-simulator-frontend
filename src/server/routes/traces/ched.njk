@@ -1,0 +1,34 @@
+{% extends 'layouts/page.njk' %}
+
+{% from "partials/traces/ched-header.njk" import chedHeader, chedPart with context %}
+
+{% block content %}
+  {{ chedHeader(ched) }}
+
+  {% if created %}
+    {% call appCard({ classes: "app-result" }) %}
+      <p><strong>Created.</strong> The simulator issued this reference.
+        Next, <a href="/traces/cheds/{{ ched.id }}/decision">record the border decision in Part II</a>.</p>
+    {% endcall %}
+  {% endif %}
+
+  <script type="application/json" id="ched-model">{{ ched.model | jsonIsland }}</script>
+  {# Shown by the form's client module when the simulator saves the CHED. #}
+  <div id="ched-saved" hidden>
+    {% call appCard({ classes: "app-result" }) %}
+      <p><strong>Saved.</strong> The simulator rebuilt the certificate from the form.</p>
+    {% endcall %}
+  </div>
+
+  {% call chedPart(ched, "I") %}
+    {% set chedForm = {
+      id: "edit-ched",
+      model: "ched-model",
+      action: "/traces/api/cheds/" ~ ched.id,
+      method: "PUT",
+      result: "ched-saved",
+      submitText: "Save changes"
+    } %}
+    {% include "partials/traces/ched-form.njk" %}
+  {% endcall %}
+{% endblock %}

@@ -1,0 +1,53 @@
+{#-
+  What BTMS sent back about one version, as summariseReplies (routes/cds/summary.js) builds it:
+  { replies: [{ kind: "decision", title, received, items } or { kind: "error", title, received, errors }] }.
+  A decision's items are laid out as the Request tab lays out the version's items.
+-#}
+{% from "summary-list/macro.njk" import appSummaryList %}
+{% from "table/macro.njk" import appTable %}
+{% from "tag/macro.njk" import appTag %}
+
+{% macro declarationReplies(group) %}
+  {% for reply in group.replies %}
+    <section class="app-cds-reply {{- ' app-cds-reply--error' if reply.kind == 'error' }}">
+      <h3 class="app-cds-reply__title">{{ reply.title }} <span class="app-muted">received {{ reply.received }}</span></h3>
+
+      {% if reply.kind == "decision" %}
+        {% for item in reply.items %}
+          <section class="app-cds-item app-cds-item--read">
+            <h4 class="app-cds-item__title">Item {{ item.number }}</h4>
+            {% if item.commodity %}
+              {{ appSummaryList({ classes: "app-summary-list--single", rows: [
+                { key: { text: "Commodity" }, value: { html: '<span class="app-mono">' ~ (item.commodity | escape) ~ '</span> ' ~ (item.commodityDescription | escape) } }
+              ] }) }}
+            {% endif %}
+            <h5 class="app-cds-item__caption">Checks</h5>
+            {% if item.checks | length %}
+              {% set rows = [] %}
+              {% for check in item.checks %}
+                {% set _ = rows.push([
+                  { text: check.code },
+                  { html: appTag(check.decision) },
+                  { text: check.reason }
+                ]) %}
+              {% endfor %}
+              {{ appTable({ head: [{ text: "Check" }, { text: "Decision" }, { text: "Reason" }], rows: rows }) }}
+            {% else %}
+              <p class="app-empty">None</p>
+            {% endif %}
+          </section>
+        {% endfor %}
+      {% else %}
+        <section class="app-cds-item app-cds-item--read">
+          {% set rows = [] %}
+          {% for error in reply.errors %}
+            {% set _ = rows.push([{ html: '<span class="app-mono">' ~ (error.code | escape) ~ '</span>' }, { text: error.message }]) %}
+          {% endfor %}
+          {{ appTable({ head: [{ text: "Error" }, { text: "Message" }], rows: rows }) }}
+        </section>
+      {% endif %}
+    </section>
+  {% else %}
+    <p class="app-empty">BTMS hasn't replied to this version yet. Its answer usually arrives within a few seconds: reload to check.</p>
+  {% endfor %}
+{% endmacro %}

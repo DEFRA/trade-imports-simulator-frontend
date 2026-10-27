@@ -1,0 +1,12 @@
+{% macro statusTag(status) %}
+  {%- set classes = {
+    NEW: "",
+    DRAFT: "app-tag--grey",
+    IN_PROGRESS: "app-tag--yellow",
+    VALIDATED: "app-tag--green",
+    REJECTED: "app-tag--red",
+    PARTIALLY_REJECTED: "app-tag--red"
+  } -%}
+  {%- from "tag/macro.njk" import appTag -%}
+  {{- appTag({ text: status, classes: classes[status] if classes[status] is defined else "app-tag--grey" }) -}}
+{% endmacro %}

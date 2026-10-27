@@ -23,7 +23,7 @@ describe('#errors', () => {
     })
 
     expect(result).toEqual(
-      expect.stringContaining('Page not found | trade-imports-simulator-frontend')
+      expect.stringContaining('Page not found | Trade imports simulator')
     )
     expect(statusCode).toBe(statusCodes.notFound)
   })

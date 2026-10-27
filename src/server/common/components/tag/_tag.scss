@@ -1,0 +1,30 @@
+.app-tag {
+  display: inline-block;
+  padding: 2px 10px;
+  border-radius: 12px;
+  background: #d2e2f1;
+  color: #003078;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.app-tag--green {
+  background: #cce2d8;
+  color: #005a30;
+}
+
+.app-tag--grey {
+  background: #e8e8e8;
+  color: #383838;
+}
+
+.app-tag--red {
+  background: #f6d7d2;
+  color: #942514;
+}
+
+.app-tag--yellow {
+  background: #fcd6c3;
+  color: #6b3800;
+}

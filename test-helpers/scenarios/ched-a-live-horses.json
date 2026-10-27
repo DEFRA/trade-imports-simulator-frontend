@@ -1,0 +1,52 @@
+{
+  "exchangedDocument": {
+    "includedNote": {
+      "CHED_TYPE": "A"
+    },
+    "declaration": {
+      "includedClause": {
+        "PURPOSE": "FREE_CIRCULATION",
+        "GOODS_CERTIFIED_AS": "FATTENING"
+      }
+    }
+  },
+  "specifiedConsignment": {
+    "exportCountry": "AF",
+    "importCountry": "XI",
+    "consignorParty": {
+      "identifier": "770198",
+      "postalAddress": {
+        "countryId": "AF"
+      }
+    },
+    "consigneeParty": {
+      "identifier": "899361",
+      "postalAddress": {
+        "countryId": "XI"
+      }
+    },
+    "unloadingBaseportLocation": {
+      "identifier": "GBBEL",
+      "countryId": "XI"
+    },
+    "includedConsignmentItem": {
+      "natureIdCargo": "12",
+      "includedTradeLineItem": [
+        {
+          "applicableClassification": {
+            "CN": "0101"
+          },
+          "originCountry": "AF",
+          "netVolume": {
+            "value": 2,
+            "unitCode": "H87"
+          },
+          "physicalReferencedLogisticsPackage": {
+            "typeCode": "BX",
+            "itemQuantity": 2
+          }
+        }
+      ]
+    }
+  }
+}

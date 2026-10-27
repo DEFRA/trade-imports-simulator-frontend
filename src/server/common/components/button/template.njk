@@ -1,0 +1,16 @@
+{#- Same params as govukButton. Modifier classes: app-button--secondary, app-button--warning, app-button--blue, app-button--link. -#}
+{% from "macros/attributes.njk" import appAttributes %}
+{% set classNames = "app-button" ~ (" " ~ params.classes if params.classes) %}
+{% if params.href %}
+<a href="{{ params.href }}" class="{{ classNames }}" role="button" draggable="false" {{- appAttributes(params.attributes) }}>
+  {{- params.html | safe if params.html else params.text -}}
+</a>
+{% else %}
+<button type="{{ params.type | default('submit') }}" class="{{ classNames }}"
+  {%- if params.name %} name="{{ params.name }}"{% endif %}
+  {%- if params.value is defined %} value="{{ params.value }}"{% endif %}
+  {%- if params.disabled %} disabled{% endif %}
+  {{- appAttributes(params.attributes) }}>
+  {{- params.html | safe if params.html else params.text -}}
+</button>
+{% endif %}

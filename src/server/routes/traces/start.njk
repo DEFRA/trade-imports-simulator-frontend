@@ -1,0 +1,28 @@
+{% extends 'layouts/page.njk' %}
+
+{% from "partials/traces/ched-header.njk" import chedParts %}
+
+{% block content %}
+  {{ appBreadcrumbs({ items: [{ text: "CHEDs", href: "/traces" }, { text: "Create a CHED" }] }) }}
+  {{ appHeading({ text: "Create a CHED", caption: "Part I, the declaration. " ~ chedParts["I"] }) }}
+
+  {# Each start opens the create form, filled from it. #}
+  <section class="app-start" aria-labelledby="ched-start-title">
+    <h2 class="app-start__title" id="ched-start-title">Start from</h2>
+    <div class="app-start__options">
+      <div class="app-start__option">
+        <p class="app-field__label">A new blank CHED</p>
+        <div class="app-start__buttons">
+          {% for start in blankStarts %}
+            {{ appButton({ text: start.name, href: "?start=" ~ start.id, classes: "app-button--choice" }) }}
+          {% endfor %}
+        </div>
+      </div>
+      <p class="app-start__or">or</p>
+      <form class="app-start__option" method="get">
+        {{ appSelect({ name: "start", label: { text: "A scenario" }, items: scenarioItems }) }}
+        {{ appButton({ text: "Start", classes: "app-button--secondary" }) }}
+      </form>
+    </div>
+  </section>
+{% endblock %}

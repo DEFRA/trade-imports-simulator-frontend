@@ -1,0 +1,160 @@
+{#-
+  The clearance request form, shared by the create and amend pages. The cds-declaration-form client
+  module fills it from a request (the contract's JSON) and builds the request back. Expects
+  `items` (declarants, the declarant input's suggestions; select options: declarationTypes,
+  goodsLocations, procedureCodes, documentCodes, documentStatuses, documentControls, checkCodes,
+  combinations, countries; and `lookups`, which the module reads) and `declarationForm`:
+  { id, submitText, result, model (the id of the request's JSON island), and on the amend page mrn
+  and version (the version being amended) }. With `scenarioAction`, the form can be saved as a
+  scenario there. Sending it shows the `result` element, which the module fills in.
+-#}
+<form id="{{ declarationForm.id }}" method="post" novalidate data-module="app-cds-declaration-form"
+  data-action="/cds/api/clearance-requests"
+  data-commodities="/cds/api/commodities"
+  data-lookups="{{ declarationForm.id }}-lookups"
+  data-result="{{ declarationForm.result }}"
+  data-model="{{ declarationForm.model }}"
+  {%- if declarationForm.mrn %} data-mrn="{{ declarationForm.mrn }}" data-version="{{ declarationForm.version }}"{% endif %}
+  {%- if declarationForm.scenarioAction %} data-scenario-action="{{ declarationForm.scenarioAction }}"{% endif %}>
+
+  <script type="application/json" id="{{ declarationForm.id }}-lookups">{{ items.lookups | jsonIsland }}</script>
+
+  <div data-cds-form-error hidden>
+    {{ appErrorSummary({
+      titleText: "The simulator refused it",
+      descriptionHtml: '<span data-cds-form-error-detail></span>'
+    }) }}
+  </div>
+
+  <fieldset class="app-form-body">
+  <legend class="app-visually-hidden">Clearance request</legend>
+
+  <h3>Declaration</h3>
+  <div class="app-fields">
+    {{ appSelect({ name: "declarationType", label: { text: "Declaration type" }, items: items.declarationTypes }) }}
+    {{ appInput({ name: "arrivalDateTime", type: "datetime-local", label: { text: "Arrival" } }) }}
+    {{ appInput({ name: "declarant", label: { text: "Declarant" }, spellcheck: false, attributes: { list: declarationForm.id ~ "-declarants" } }) }}
+    <datalist id="{{ declarationForm.id }}-declarants">
+      {%- for declarant in items.declarants %}<option value="{{ declarant }}">{% endfor -%}
+    </datalist>
+    {{ appSelect({ name: "dispatchCountryCode", label: { text: "Dispatch country" }, items: items.countries }) }}
+    {{ appSelect({ name: "goodsLocationCode", label: { text: "Goods location" }, items: items.goodsLocations }) }}
+  </div>
+
+  <h3>Items</h3>
+  <div data-cds-items></div>
+  <template data-cds-item>
+    <fieldset class="app-cds-item">
+      <legend class="app-cds-item__title">Item <span data-cds-item-number></span></legend>
+      <div class="app-fields">
+        <div class="app-cds-item__commodity">
+          {{ appCommodityPicker({ id: "item-__ITEM__-taricCommodityCode", name: "taricCommodityCode", label: { text: "Commodity code" }, attributes: { "data-item-field": "taricCommodityCode" } }) }}
+        </div>
+        <div class="app-cds-item__procedure">
+          {{ appSelect({ id: "item-__ITEM__-customsProcedureCode", name: "customsProcedureCode", label: { text: "Procedure code" }, items: items.procedureCodes, attributes: { "data-item-field": "customsProcedureCode" } }) }}
+        </div>
+        {{ appSelect({ id: "item-__ITEM__-itemOriginCountryCode", name: "itemOriginCountryCode", label: { text: "Origin country" }, items: items.countries, attributes: { "data-item-field": "itemOriginCountryCode" } }) }}
+        {{ appInput({ id: "item-__ITEM__-itemNetMass", name: "itemNetMass", inputmode: "decimal", label: { text: "Net mass (kg)" }, classes: "app-input--number", attributes: { "data-item-field": "itemNetMass" } }) }}
+        {{ appInput({ id: "item-__ITEM__-itemSupplementaryUnits", name: "itemSupplementaryUnits", inputmode: "decimal", label: { text: "Supplementary units" }, classes: "app-input--number", attributes: { "data-item-field": "itemSupplementaryUnits" } }) }}
+      </div>
+
+      <div class="app-cds-item__combination">
+        {{ appSelect({ id: "item-__ITEM__-combination", name: "combination", label: { text: "Checks and documents" }, items: items.combinations, attributes: { "data-cds-combination": "" } }) }}
+      </div>
+
+      <div class="app-cds-item__lines">
+        <div>
+          <table class="app-table app-lines">
+            <caption class="app-cds-item__caption">Checks</caption>
+            <thead>
+              <tr>
+                <th scope="col">Code</th>
+                <th scope="col" class="app-lines__fit">Department</th>
+                <th scope="col" class="app-lines__fit"><span class="app-visually-hidden">Actions</span></th>
+              </tr>
+            </thead>
+            <tbody data-cds-checks></tbody>
+          </table>
+          <div class="app-button-row">
+            {{ appButton({ text: "Add check", type: "button", classes: "app-button--secondary", attributes: { "data-cds-check-add": "" } }) }}
+          </div>
+        </div>
+
+        <div>
+          <table class="app-table app-lines">
+            <caption class="app-cds-item__caption">Documents</caption>
+            <thead>
+              <tr>
+                <th scope="col">Code</th>
+                <th scope="col">Reference</th>
+                <th scope="col" class="app-lines__fit">Status</th>
+                <th scope="col" class="app-lines__fit">Control</th>
+                <th scope="col" class="app-lines__fit"><span class="app-visually-hidden">Actions</span></th>
+              </tr>
+            </thead>
+            <tbody data-cds-documents></tbody>
+          </table>
+          <div class="app-button-row">
+            {{ appButton({ text: "Add document", type: "button", classes: "app-button--secondary", attributes: { "data-cds-document-add": "" } }) }}
+          </div>
+        </div>
+      </div>
+
+      <div class="app-button-row app-cds-item__remove">
+        {{ appButton({ text: "Remove item", type: "button", classes: "app-button--link", attributes: { "data-cds-item-remove": "" } }) }}
+      </div>
+    </fieldset>
+  </template>
+  <template data-cds-check>
+    <tr>
+      <td>{{ appSelect({ id: "item-__ITEM__-check-__CHECK__-checkCode", name: "checkCode", label: { text: "Check code", classes: "app-visually-hidden" }, items: items.checkCodes, attributes: { "data-check-field": "checkCode" } }) }}</td>
+      <td>{{ appInput({ id: "item-__ITEM__-check-__CHECK__-departmentCode", name: "departmentCode", label: { text: "Department", classes: "app-visually-hidden" }, classes: "app-input--code", spellcheck: false, attributes: { "data-check-field": "departmentCode" } }) }}</td>
+      <td>{{ appButton({ text: "Remove", type: "button", classes: "app-button--link", attributes: { "data-cds-check-remove": "" } }) }}</td>
+    </tr>
+  </template>
+  <template data-cds-document>
+    <tr>
+      <td>{{ appSelect({ id: "item-__ITEM__-document-__DOC__-documentCode", name: "documentCode", label: { text: "Document code", classes: "app-visually-hidden" }, items: items.documentCodes, attributes: { "data-document-field": "documentCode" } }) }}</td>
+      <td>{{ appInput({ id: "item-__ITEM__-document-__DOC__-documentReference", name: "documentReference", label: { text: "Reference", classes: "app-visually-hidden" }, spellcheck: false, classes: "app-input--reference", attributes: { "data-document-field": "documentReference" } }) }}</td>
+      <td>{{ appSelect({ id: "item-__ITEM__-document-__DOC__-documentStatus", name: "documentStatus", label: { text: "Status", classes: "app-visually-hidden" }, items: items.documentStatuses, classes: "app-select--code", attributes: { "data-document-field": "documentStatus" } }) }}</td>
+      <td>{{ appSelect({ id: "item-__ITEM__-document-__DOC__-documentControl", name: "documentControl", label: { text: "Control", classes: "app-visually-hidden" }, items: items.documentControls, classes: "app-select--code", attributes: { "data-document-field": "documentControl" } }) }}</td>
+      <td>{{ appButton({ text: "Remove", type: "button", classes: "app-button--link", attributes: { "data-cds-document-remove": "" } }) }}</td>
+    </tr>
+  </template>
+
+  <div class="app-button-row">
+    {{ appButton({ text: "Add item", type: "button", classes: "app-button--secondary", attributes: { "data-cds-item-add": "" } }) }}
+  </div>
+
+  <div class="app-button-row">
+    {{ appButton({ text: declarationForm.submitText, attributes: { "data-cds-form-submit": "" } }) }}
+  </div>
+
+  {% if declarationForm.scenarioAction %}
+  {# Not a form of its own: a form can't nest, and the scenario is this form's request. #}
+  <div class="app-save-scenario">
+    {{ appInput({
+      name: "scenarioName",
+      label: { text: "Save as a scenario" },
+      classes: "app-input--scenario-name",
+      attributes: { "data-scenario-name": "" }
+    }) }}
+    {{ appButton({ text: "Save scenario", type: "button", classes: "app-button--secondary", attributes: { "data-scenario-save": "" } }) }}
+    <p class="app-save-scenario__status" role="status" data-scenario-status></p>
+  </div>
+  {% endif %}
+  </fieldset>
+</form>
+
+{# Filled in and shown by the client module once the simulator has the request. #}
+<div id="{{ declarationForm.result }}" hidden>
+  {% call appCard({ classes: "app-result" }) %}
+    <p><strong>Sent.</strong> <span data-result-mrn></span> version <span data-result-version></span>
+      is on its way to BTMS.</p>
+    <p class="app-links">
+      <a data-result-view href="#">View it</a>
+      <a data-result-amend href="#">Amend it</a>
+      <a data-result-btms data-btms-portal="{{ btmsPortalUrl }}" href="#" target="_blank" rel="noopener">Find it in BTMS <span aria-hidden="true">↗</span><span class="app-visually-hidden"> (opens in a new tab)</span></a>
+    </p>
+  {% endcall %}
+</div>

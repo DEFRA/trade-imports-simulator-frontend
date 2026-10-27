@@ -1,0 +1,183 @@
+@use 'variables' as *;
+
+.app-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 12px 24px;
+  margin-bottom: 16px;
+}
+
+.app-toolbar__form {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+}
+
+.app-input--reference {
+  width: 22ch;
+}
+
+.app-title-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 10px;
+  margin-bottom: 16px;
+
+  .app-heading {
+    margin-bottom: 0;
+  }
+
+  // The external links sit at the far end of the row.
+  .app-links {
+    margin-left: auto;
+  }
+}
+
+.app-ched-title {
+  font-size: 20px;
+}
+
+// The part tabs open straight into the panel holding the form: the tab row's bottom border is the
+// panel's top edge, and the current tab breaks through it.
+.app-ched-part {
+  margin-bottom: 16px;
+
+  .app-sub-navigation {
+    margin-bottom: 0;
+  }
+}
+
+.app-ched-part__panel {
+  padding: 16px;
+  border: 1px solid $app-panel-border;
+  border-top: none;
+  border-radius: 0 0 6px 6px;
+  background: $app-panel-background;
+
+  // Part II's sections stay cards, but quieter ones, so they read as inside the panel.
+  .app-card {
+    background: $app-row-stripe;
+    border-color: $app-row-border;
+  }
+}
+
+// At the top of the panel: who completes this part in the real world.
+.app-part-intro {
+  margin-bottom: 12px;
+  color: $app-muted-text;
+}
+
+// The starting point sits above the form, outside it: choosing one fills the form and enables it.
+.app-start {
+  margin-bottom: 16px;
+  padding: 12px 16px;
+  border: 1px solid $app-panel-border;
+  border-left: 4px solid $app-blue;
+  border-radius: 6px;
+  background: $app-tint-blue;
+}
+
+.app-start__title {
+  margin: 0 0 8px;
+  border: none;
+  padding: 0;
+}
+
+.app-start__options {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.app-start__option {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 280px;
+}
+
+.app-start__buttons {
+  display: flex;
+  gap: 8px;
+}
+
+.app-start__or {
+  color: $app-muted-text;
+}
+
+.app-form-body {
+  min-width: 0;
+  border: none;
+
+  &:disabled {
+    opacity: 0.45;
+  }
+}
+
+.app-columns {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 0 16px;
+}
+
+.app-note {
+  margin-top: 8px;
+}
+
+// Commodity lines are inputs in table cells, so the cells need less padding than a read-only table.
+.app-lines td {
+  padding: 4px 6px;
+}
+
+.app-result {
+  border-left: 4px solid $app-green;
+}
+
+.app-links {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 12px;
+}
+
+.app-result--rejected {
+  border-left-color: $app-red;
+}
+
+// Decision checks read as TRACES's Part II: one row per question, its label to the left.
+.app-checks .app-radios {
+  flex-direction: row;
+  align-items: center;
+  padding: 6px 0;
+
+  // A floated legend joins the flex row; an unfloated one sits outside it.
+  > legend {
+    float: left;
+    flex: 0 0 100px;
+    padding: 0;
+  }
+}
+
+// Saving a scenario sits below the form's own buttons, apart from them, since it creates no CHED.
+.app-save-scenario {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 8px 12px;
+  margin-top: 16px;
+  padding-top: 12px;
+  border-top: 1px solid $app-row-border;
+}
+
+.app-input--scenario-name {
+  width: 36ch;
+}
+
+.app-save-scenario__status {
+  margin: 0 0 6px;
+  color: $app-muted-text;
+}
