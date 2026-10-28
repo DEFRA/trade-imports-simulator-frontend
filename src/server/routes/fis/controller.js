@@ -11,7 +11,10 @@ import {
 } from '#/server/common/clients/fis-simulator.js'
 import { apiRoute, relay } from '#/server/common/helpers/api-route.js'
 import { pagination } from '#/server/common/helpers/pagination.js'
-import { iuuOptions, iuuOptionsWithNone } from './iuu-options.js'
+import {
+  iuuCheckOutcomeValues,
+  iuuCheckOutcomes
+} from './iuu-check-outcomes.js'
 
 // The simulator takes any reference in its path; this keeps to ones that are safe in a URL, such as
 // IUU.GB.2026.0000001, or the "1" it issues first.
@@ -24,23 +27,14 @@ const referenceParam = {
   params: Joi.object({ reference: reference.required() })
 }
 
-// Null is a notification with no outcome yet, as the form's None sends it.
-const iuuOption = Joi.string()
-  .valid(...iuuOptions.map(({ value }) => value))
+// Null is a notification with no outcome yet, as the form's None sends it. It must still be sent: the
+// simulator refuses a request without it (400).
+const iuuCheckOutcome = Joi.string()
+  .valid(...iuuCheckOutcomeValues)
   .allow(null)
   .required()
 
 const pageSize = 10
-
-// A notification as the pages show it.
-function summarise({ id, created, updated, iuuNotification }) {
-  return {
-    reference: iuuNotification?.reference ?? id,
-    iuuOption: iuuNotification?.iuuOption,
-    created,
-    updated
-  }
-}
 
 // Every notification in the simulator, newest created first, a page at a time. The simulator doesn't
 // say whether more follow, so each page asks for one more than it shows. A delete or reset comes back
@@ -63,7 +57,7 @@ export const fisController = {
     })
     return h.view('fis/index', {
       pageTitle: 'IUU notifications',
-      notifications: notifications.slice(0, pageSize).map(summarise),
+      notifications: notifications.slice(0, pageSize),
       pastFirstPage: page > 1,
       deleted,
       reset,
@@ -81,7 +75,7 @@ export const createNotificationController = {
   handler(_request, h) {
     return h.view('fis/create', {
       pageTitle: 'Create an IUU notification',
-      iuuOptions: iuuOptionsWithNone
+      iuuCheckOutcomes
     })
   }
 }
@@ -105,16 +99,13 @@ export const notificationController = {
     }
   },
   async handler(request, h) {
-    const notification = summarise(
-      await getIuuNotification(request.params.reference)
-    )
+    const notification = await getIuuNotification(request.params.reference)
     return h.view('fis/notification', {
       pageTitle: notification.reference,
       notification,
       created: request.query.created,
       updated: request.query.updated,
-      // One created with none keeps None on offer, so the form shows what it holds.
-      iuuOptions: notification.iuuOption ? iuuOptions : iuuOptionsWithNone
+      iuuCheckOutcomes
     })
   }
 }
@@ -125,7 +116,10 @@ export const nextIdApiController = {
 }
 
 export const createNotificationApiController = {
-  options: apiRoute({ ...referenceParam, payload: Joi.object({ iuuOption }) }),
+  options: apiRoute({
+    ...referenceParam,
+    payload: Joi.object({ iuuCheckOutcome })
+  }),
   handler: (request, h) =>
     relay(
       h,
@@ -135,7 +129,10 @@ export const createNotificationApiController = {
 }
 
 export const updateNotificationApiController = {
-  options: apiRoute({ ...referenceParam, payload: Joi.object({ iuuOption }) }),
+  options: apiRoute({
+    ...referenceParam,
+    payload: Joi.object({ iuuCheckOutcome })
+  }),
   handler: (request, h) =>
     relay(h, () =>
       updateIuuNotification(request.params.reference, request.payload)
@@ -171,9 +168,7 @@ export const deleteNotificationController = {
   options: { validate: referenceParam },
   async handler(request, h) {
     // Asking the simulator first answers a reference it doesn't hold with a 404, not a confirmation.
-    const { reference } = summarise(
-      await getIuuNotification(request.params.reference)
-    )
+    const { reference } = await getIuuNotification(request.params.reference)
     const path = `/fis/notifications/${encodeURIComponent(reference)}`
     return h.view('fis/confirm', {
       pageTitle: `Delete ${reference}`,

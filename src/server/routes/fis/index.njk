@@ -33,13 +33,12 @@
       {% for notification in notifications %}
         {% set _ = rows.push([
           { html: '<a href="/fis/notifications/' ~ (notification.reference | urlencode) ~ '" class="app-mono">' ~ (notification.reference | escape) ~ '</a>' },
-          { text: notification.iuuOption or "None" },
-          { text: notification.created | formatDate("d MMM yyyy HH:mm") },
-          { text: notification.updated | formatDate("d MMM yyyy HH:mm") }
+          { text: notification.iuuCheckOutcome or "None" },
+          { text: notification.lastUpdated | formatDate("d MMM yyyy HH:mm") }
         ]) %}
       {% endfor %}
       {{ appTable({
-        head: [{ text: "Reference" }, { text: "IUU option" }, { text: "Created" }, { text: "Updated" }],
+        head: [{ text: "Reference" }, { text: "IUU check outcome" }, { text: "Last updated" }],
         rows: rows
       }) }}
     {% elif pastFirstPage %}

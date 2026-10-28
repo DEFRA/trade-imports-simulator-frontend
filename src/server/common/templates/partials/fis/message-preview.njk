@@ -3,6 +3,6 @@
   (its data-preview names this panel's pre) and keeps it up to date as the form changes.
 -#}
 {% call appCard({ title: { text: "Message it publishes to BTMS" }, classes: "app-message-preview" }) %}
-  <p class="app-muted">Every field, nulls included. Values the simulator sets when it sends show as &lt;set by the simulator&gt;.</p>
+  <p class="app-muted">The IuuNotification message body, the same for a create and an update. The simulator sets lastUpdated to the time it sends.</p>
   <pre id="notification-message" aria-live="polite"></pre>
 {% endcall %}

@@ -54,8 +54,8 @@ describe('FIS routes', () => {
     })
   }
 
-  const create = (reference, iuuOption = 'IUUOK') =>
-    send('POST', `/fis/api/notifications/${reference}`, { iuuOption })
+  const create = (reference, iuuCheckOutcome = 'IUUOK') =>
+    send('POST', `/fis/api/notifications/${reference}`, { iuuCheckOutcome })
 
   const rowsOf = ($) =>
     $('tbody tr')
@@ -112,16 +112,14 @@ describe('FIS routes', () => {
         expect((await create(reference)).statusCode).toBe(201)
       }
       await send('PUT', '/fis/api/notifications/IUU.GB.2026.0000011', {
-        iuuOption: 'IUUNA'
+        iuuCheckOutcome: 'IUUNA'
       })
 
       const { $ } = await get('/fis')
       const rows = rowsOf($)
 
       expect(rows).toHaveLength(10)
-      expect(rows[0]).toBe(
-        'IUU.GB.2026.0000011 IUUNA 28 Oct 2026 09:00 28 Oct 2026 09:00'
-      )
+      expect(rows[0]).toBe('IUU.GB.2026.0000011 IUUNA 28 Oct 2026 09:00')
       expect(rows.at(-1)).toContain('IUU.GB.2026.0000002')
       expect(
         $('tbody a[href="/fis/notifications/IUU.GB.2026.0000011"]')
@@ -205,7 +203,7 @@ describe('FIS routes', () => {
   })
 
   describe('Create a notification', () => {
-    test('Should ask for a reference, offer the next ID, and offer the IUU options', async () => {
+    test('Should ask for a reference, offer the next ID, and offer the IUU check outcomes', async () => {
       const { $ } = await get('/fis/notifications/new')
       const form = $('form[data-module="app-iuu-notification-form"]')
 
@@ -217,13 +215,13 @@ describe('FIS routes', () => {
       expect(form.find('button[data-next-id]').attr('type')).toBe('button')
       expect(
         form
-          .find('select[name="iuuOption"] option')
+          .find('select[name="iuuCheckOutcome"] option')
           .map((_, o) => $(o).attr('value'))
           .get()
       ).toEqual(['', 'IUUOK', 'IUUNA', 'IUUNotCompliant'])
-      expect(form.find('select[name="iuuOption"] option').first().text()).toBe(
-        'None'
-      )
+      expect(
+        form.find('select[name="iuuCheckOutcome"] option').first().text()
+      ).toBe('None')
     })
 
     test('Should show, under the form, the message it will publish', async () => {
@@ -231,30 +229,11 @@ describe('FIS routes', () => {
       const form = $('form[data-module="app-iuu-notification-form"]')
 
       expect(form.attr('data-preview')).toBe('notification-message')
-      expect(form.attr('data-created')).toBeUndefined()
       expect($('#notification-message').is('pre')).toBe(true)
       // Its own panel, after the form's.
       expect($('.app-card').last().find('h2').text()).toBe(
         'Message it publishes to BTMS'
       )
-    })
-
-    test('Should send None as a null IUU option', async () => {
-      const { statusCode } = await create('IUU.GB.2026.0000001', null)
-
-      expect(statusCode).toBe(201)
-      expect(
-        simulator.notifications.get('IUU.GB.2026.0000001').iuuNotification
-          .iuuOption
-      ).toBeNull()
-
-      const list = await get('/fis')
-      expect(rowsOf(list.$)[0]).toContain('IUU.GB.2026.0000001 None')
-
-      const { $ } = await get('/fis/notifications/IUU.GB.2026.0000001')
-      // Nothing marked selected, so the select opens on its first option, None.
-      expect($('select[name="iuuOption"] option[selected]')).toHaveLength(0)
-      expect($('select[name="iuuOption"] option').first().text()).toBe('None')
     })
 
     test("Should relay the simulator's next ID", async () => {
@@ -269,21 +248,18 @@ describe('FIS routes', () => {
       expect(JSON.parse(payload)).toEqual({ nextId: 'IUU.GB.2026.0000042' })
     })
 
-    test('Should relay a new notification and the event the simulator published', async () => {
+    test('Should relay a new notification as the simulator published it', async () => {
       const { statusCode, payload } = await create(
         'IUU.GB.2026.0000001',
         'IUUNotCompliant'
       )
 
       expect(statusCode).toBe(201)
-      expect(JSON.parse(payload)).toMatchObject({
-        operation: 'Created',
-        resourceId: 'IUU.GB.2026.0000001'
+      expect(JSON.parse(payload)).toEqual({
+        reference: 'IUU.GB.2026.0000001',
+        lastUpdated: '2026-10-28T09:00:00.000Z',
+        iuuCheckOutcome: 'IUUNotCompliant'
       })
-      expect(
-        simulator.notifications.get('IUU.GB.2026.0000001').iuuNotification
-          .iuuOption
-      ).toBe('IUUNotCompliant')
     })
 
     test("Should pass on the simulator's refusal of a reference it holds", async () => {
@@ -300,7 +276,35 @@ describe('FIS routes', () => {
       )
     })
 
-    test('Should refuse an IUU option the form does not offer', async () => {
+    test('Should send None as a null IUU check outcome', async () => {
+      const { statusCode, payload } = await create('IUU.GB.2026.0000001', null)
+
+      expect(statusCode).toBe(201)
+      expect(JSON.parse(payload).iuuCheckOutcome).toBeNull()
+
+      const list = await get('/fis')
+      expect(rowsOf(list.$)[0]).toContain('IUU.GB.2026.0000001 None')
+
+      const { $ } = await get('/fis/notifications/IUU.GB.2026.0000001')
+      expect($('.app-summary-list').text()).toContain('None')
+      // Nothing marked selected, so the select opens on its first option, None.
+      expect($('select[name="iuuCheckOutcome"] option[selected]')).toHaveLength(
+        0
+      )
+    })
+
+    test('Should refuse a notification that leaves out the IUU check outcome', async () => {
+      const { statusCode } = await send(
+        'POST',
+        '/fis/api/notifications/IUU.GB.2026.0000001',
+        {}
+      )
+
+      expect(statusCode).toBe(statusCodes.badRequest)
+      expect(simulator.notifications.size).toBe(0)
+    })
+
+    test('Should refuse an IUU check outcome the form does not offer', async () => {
       const { statusCode } = await create('IUU.GB.2026.0000001', 'MAYBE')
 
       expect(statusCode).toBe(statusCodes.badRequest)
@@ -309,7 +313,7 @@ describe('FIS routes', () => {
   })
 
   describe('A notification', () => {
-    test('Should show it, with a form to update its IUU option', async () => {
+    test('Should show it, with a form to update its IUU check outcome', async () => {
       await create('IUU.GB.2026.0000001', 'IUUNA')
 
       const { statusCode, $ } = await get(
@@ -322,12 +326,11 @@ describe('FIS routes', () => {
       expect($('.app-result').text()).toContain('Created.')
       expect($('.app-summary-list').text()).toContain('IUUNA')
       expect(form.attr('data-method')).toBe('PUT')
-      expect(form.attr('data-created')).toBe('2026-10-28T09:00:00.000Z')
       expect(form.find('input[name="reference"]').attr('type')).toBe('hidden')
       expect(form.find('button[data-next-id]')).toHaveLength(0)
-      expect(form.find('select[name="iuuOption"] option[selected]').val()).toBe(
-        'IUUNA'
-      )
+      expect(
+        form.find('select[name="iuuCheckOutcome"] option[selected]').val()
+      ).toBe('IUUNA')
     })
 
     test('Should offer to delete it', async () => {
@@ -395,20 +398,24 @@ describe('FIS routes', () => {
       expect($('.app-result').text()).toContain('Saved.')
     })
 
-    test('Should relay an update and the event the simulator published', async () => {
+    test('Should relay an update as the simulator published it', async () => {
       await create('IUU.GB.2026.0000001')
 
       const { statusCode, payload } = await send(
         'PUT',
         '/fis/api/notifications/IUU.GB.2026.0000001',
-        { iuuOption: 'IUUNotCompliant' }
+        { iuuCheckOutcome: 'IUUNotCompliant' }
       )
 
       expect(statusCode).toBe(statusCodes.ok)
-      expect(JSON.parse(payload).operation).toBe('Updated')
+      expect(JSON.parse(payload)).toEqual({
+        reference: 'IUU.GB.2026.0000001',
+        lastUpdated: '2026-10-28T09:00:01.000Z',
+        iuuCheckOutcome: 'IUUNotCompliant'
+      })
       expect(
         simulator.notifications.get('IUU.GB.2026.0000001').iuuNotification
-          .iuuOption
+          .iuuCheckOutcome
       ).toBe('IUUNotCompliant')
     })
 
@@ -416,7 +423,7 @@ describe('FIS routes', () => {
       const { statusCode } = await send(
         'PUT',
         '/fis/api/notifications/IUU.GB.2026.0000009',
-        { iuuOption: 'IUUOK' }
+        { iuuCheckOutcome: 'IUUOK' }
       )
 
       expect(statusCode).toBe(statusCodes.notFound)

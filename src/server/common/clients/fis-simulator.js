@@ -24,8 +24,8 @@ export function getNextId() {
 }
 
 /**
- * Notifications by when they were created, newest first, skipping the first `skip`: `[{ id, etag,
- * created, updated, iuuNotification: { reference, lastUpdated, iuuOption } }]`.
+ * Notifications by when they were created, newest first, skipping the first `skip`: `[{ reference,
+ * lastUpdated, iuuCheckOutcome }]`.
  */
 export function listIuuNotifications({ skip = 0, limit = 10 } = {}) {
   return send(
@@ -33,19 +33,22 @@ export function listIuuNotifications({ skip = 0, limit = 10 } = {}) {
   )
 }
 
-/** One notification: `{ id, etag, created, updated, iuuNotification: { reference, lastUpdated, iuuOption } }`. */
+/** One notification: `{ reference, lastUpdated, iuuCheckOutcome }`. */
 export function getIuuNotification(reference) {
   return send(notification(reference))
 }
 
-/** Creates a notification under this reference, refused (409) if it exists: the `Created` event it published. */
-export function createIuuNotification(reference, { iuuOption }) {
-  return send(notification(reference), json('POST', { iuuOption }))
+/**
+ * Creates a notification under this reference, refused (409) if it exists, and publishes it: the
+ * notification as published.
+ */
+export function createIuuNotification(reference, { iuuCheckOutcome }) {
+  return send(notification(reference), json('POST', { iuuCheckOutcome }))
 }
 
-/** Changes a notification's IUU option: the `Updated` event it published. */
-export function updateIuuNotification(reference, { iuuOption }) {
-  return send(notification(reference), json('PUT', { iuuOption }))
+/** Changes a notification's IUU check outcome and publishes it: the notification as published. */
+export function updateIuuNotification(reference, { iuuCheckOutcome }) {
+  return send(notification(reference), json('PUT', { iuuCheckOutcome }))
 }
 
 /** Deletes a notification, 404 if there is none. Unlike a create or update, nothing is published to BTMS. */

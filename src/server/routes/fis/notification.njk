@@ -5,7 +5,7 @@
 
   <div class="app-title-row">
     <h1 class="app-mono app-ched-title">{{ notification.reference }}</h1>
-    <span class="app-muted">Updated {{ notification.updated | formatDate("d MMM yyyy HH:mm") }}</span>
+    <span class="app-muted">Last updated {{ notification.lastUpdated | formatDate("d MMM yyyy HH:mm") }}</span>
   </div>
 
   {% if created or updated %}
@@ -17,9 +17,8 @@
   {% call appCard() %}
     {{ appSummaryList({
       rows: [
-        { key: { text: "IUU option" }, value: { text: notification.iuuOption } },
-        { key: { text: "Created" }, value: { text: notification.created | formatDate("d MMM yyyy HH:mm:ss") } },
-        { key: { text: "Updated" }, value: { text: notification.updated | formatDate("d MMM yyyy HH:mm:ss") } }
+        { key: { text: "IUU check outcome" }, value: { text: notification.iuuCheckOutcome or "None" } },
+        { key: { text: "Last updated" }, value: { text: notification.lastUpdated | formatDate("d MMM yyyy HH:mm:ss") } }
       ]
     }) }}
   {% endcall %}
@@ -28,8 +27,7 @@
     {% set notificationForm = {
       method: "PUT",
       reference: notification.reference,
-      iuuOption: notification.iuuOption,
-      created: notification.created,
+      iuuCheckOutcome: notification.iuuCheckOutcome,
       done: "/fis/notifications/{reference}?updated=true",
       submitText: "Save changes"
     } %}

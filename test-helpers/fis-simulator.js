@@ -1,8 +1,11 @@
 import { vi } from 'vitest'
 
 // A fake trade-imports-fis-simulator-api behind the global fetch mock (.vite/setup-files.js). Like the
-// real one it stores notifications by reference, refuses a reference it holds already (409, as a
-// problem), answers an update to one it doesn't hold with a bare 404, and issues the next ID from the
+// real one it stores notifications by reference as { created, iuuNotification }, answers with the bare
+// IuuNotification { reference, lastUpdated, iuuCheckOutcome }, refuses a reference it holds already
+// (409, as a problem) or a missing or blank outcome (400, though null is fine), answers an update to one
+// it doesn't hold with a bare
+// 404, and issues the next ID from the
 // largest trailing number. It lists them newest created first, by skip and limit, reads one, deletes
 // one (a bare 404 if it doesn't hold it), and empties itself on a reset.
 export function mockFisSimulator() {
@@ -16,14 +19,19 @@ export function mockFisSimulator() {
   let tick = 0
   const stamp = () =>
     new Date(Date.UTC(2026, 9, 28, 9, 0, tick++)).toISOString()
-  const event = (operation, resource) => ({
-    resourceId: resource.id,
-    resourceType: 'IuuNotification',
-    operation,
-    resource,
-    etag: resource.etag,
-    timestamp: resource.updated
-  })
+  // Null is no outcome yet; a missing or blank one is refused.
+  const refuses = (body) =>
+    !('iuuCheckOutcome' in body) ||
+    (body.iuuCheckOutcome !== null && !String(body.iuuCheckOutcome).trim())
+  const outcomeRequired = () =>
+    json(
+      {
+        title: 'One or more validation errors occurred.',
+        status: 400,
+        errors: { iuuCheckOutcome: ['iuuCheckOutcome is required'] }
+      },
+      400
+    )
 
   function nextId() {
     const largest = [...notifications.keys()]
@@ -53,6 +61,7 @@ export function mockFisSimulator() {
         [...notifications.values()]
           .sort((a, b) => (a.created < b.created ? 1 : -1))
           .slice(skip, skip + limit)
+          .map(({ iuuNotification }) => iuuNotification)
       )
     }
 
@@ -73,35 +82,34 @@ export function mockFisSimulator() {
           409
         )
       }
-      const { iuuOption } = await request.json()
+      const body = await request.json()
+      if (refuses(body)) return outcomeRequired()
+      const { iuuCheckOutcome } = body
       const now = stamp()
-      const created = {
-        id: reference,
-        etag: `etag-${tick}`,
-        created: now,
-        updated: now,
-        iuuNotification: { reference, lastUpdated: now, iuuOption }
-      }
-      notifications.set(reference, created)
-      return json(event('Created', created), 201)
+      const iuuNotification = { reference, lastUpdated: now, iuuCheckOutcome }
+      notifications.set(reference, { created: now, iuuNotification })
+      return json(iuuNotification, 201)
     }
 
     if (!stored) return { status: 404, body: '' }
 
     if (request.method === 'PUT') {
-      const { iuuOption } = await request.json()
-      const now = stamp()
-      stored.etag = `etag-${tick}`
-      stored.updated = now
-      stored.iuuNotification = { reference, lastUpdated: now, iuuOption }
-      return json(event('Updated', stored))
+      const body = await request.json()
+      if (refuses(body)) return outcomeRequired()
+      const { iuuCheckOutcome } = body
+      stored.iuuNotification = {
+        reference,
+        lastUpdated: stamp(),
+        iuuCheckOutcome
+      }
+      return json(stored.iuuNotification)
     }
 
     if (request.method === 'DELETE') {
       notifications.delete(reference)
       return { status: 204, body: null }
     }
-    return json(stored)
+    return json(stored.iuuNotification)
   })
 
   return { notifications }

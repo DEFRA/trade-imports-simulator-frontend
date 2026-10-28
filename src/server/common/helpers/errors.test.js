@@ -130,7 +130,7 @@ describe('#catchAll', () => {
       new ControlApiError(405, undefined, 'FIS simulator', {
         method: 'POST',
         url: 'http://localhost:8086/iuunotification/IUU.GB.2026.0000001',
-        body: '{"iuuOption":"IUUOK"}'
+        body: '{"iuuCheckOutcome":"IUUOK"}'
       }),
       { isBoom: true }
     )
@@ -146,7 +146,7 @@ describe('#catchAll', () => {
       message: 'The FIS simulator: The simulator returned 405',
       failedRequest:
         'POST http://localhost:8086/iuunotification/IUU.GB.2026.0000001',
-      failedRequestBody: '{\n  "iuuOption": "IUUOK"\n}'
+      failedRequestBody: '{\n  "iuuCheckOutcome": "IUUOK"\n}'
     })
     expect(mockErrorLogger).toHaveBeenCalledWith(
       expect.stringContaining(

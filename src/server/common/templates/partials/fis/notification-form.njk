@@ -1,9 +1,9 @@
 {#-
-  The IUU notification form. Expects `notificationForm`: { method, done, submitText, reference } and
-  `iuuOptions`. Without a reference it asks for one, offering the simulator's next ID; with one it
-  updates that notification. Sends the IUU option as JSON, then opens `done`, its {reference} filled.
-  It keeps the message-preview panel (partials/fis/message-preview.njk) up to date as it changes.
-  `notificationForm.created` is the stored notification's, for an update.
+  The IUU notification form. Expects `notificationForm`: { method, done, submitText, reference,
+  iuuCheckOutcome } and `iuuCheckOutcomes`. Without a reference it asks for one, offering the
+  simulator's next ID; with one it updates that notification. Sends the IUU check outcome as JSON, then
+  opens `done`, its {reference} filled. It keeps the message-preview panel
+  (partials/fis/message-preview.njk) up to date as it changes.
 -#}
 <div id="notification-error" hidden>
   {{ appErrorSummary({
@@ -15,8 +15,7 @@
 <form method="post" novalidate data-module="app-iuu-notification-form"
   data-action="/fis/api/notifications/{reference}" data-method="{{ notificationForm.method }}"
   data-done="{{ notificationForm.done }}" data-error="notification-error"
-  data-preview="notification-message"
-  {%- if notificationForm.created %} data-created="{{ notificationForm.created }}"{% endif %}>
+  data-preview="notification-message">
   <div class="app-fields">
     {% if notificationForm.reference %}
       <input type="hidden" name="reference" value="{{ notificationForm.reference }}">
@@ -39,10 +38,10 @@
       </div>
     {% endif %}
     {{ appSelect({
-      name: "iuuOption",
-      label: { text: "IUU option" },
-      items: iuuOptions,
-      value: notificationForm.iuuOption
+      name: "iuuCheckOutcome",
+      label: { text: "IUU check outcome" },
+      items: iuuCheckOutcomes,
+      value: notificationForm.iuuCheckOutcome
     }) }}
   </div>
   <div class="app-button-row">

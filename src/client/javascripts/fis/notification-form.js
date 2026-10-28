@@ -5,7 +5,7 @@ import {
 } from './notification-request.js'
 
 // The IUU notification form. "Use next ID" asks the simulator for the reference after its largest.
-// Sending posts the IUU option, or null for None, as JSON to the reference's URL, then opens the notification. On
+// Sending posts the IUU check outcome, or null for None, as JSON to the reference's URL, then opens the notification. On
 // refusal it shows the simulator's message instead: a reference that exists already, say (409). The
 // panel `data-preview` names shows the message the simulator will publish to BTMS, and follows every
 // change to the form.
@@ -73,11 +73,8 @@ export class NotificationForm {
   }
 
   showMessage() {
-    const { method, created } = this.form.dataset
     this.preview.textContent = describeNotificationMessage(
-      method,
-      Object.fromEntries(new FormData(this.form)),
-      created
+      Object.fromEntries(new FormData(this.form))
     )
   }
 
