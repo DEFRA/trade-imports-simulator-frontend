@@ -43,6 +43,17 @@ describe('FIS routes', () => {
     })
   }
 
+  // A page's form, posted as a browser would, with the crumb as a field.
+  async function submit(url) {
+    const { cookie, crumb } = await session()
+    return server.inject({
+      method: 'POST',
+      url,
+      headers: { cookie },
+      payload: { crumb }
+    })
+  }
+
   const create = (reference, iuuOption = 'IUUOK') =>
     send('POST', `/fis/api/notifications/${reference}`, { iuuOption })
 
@@ -126,6 +137,64 @@ describe('FIS routes', () => {
       expect(headers.location).toBe('/fis/notifications/IUU.GB.2026.0000001')
     })
 
+    test('Should offer to reset the simulator', async () => {
+      const { $ } = await get('/fis')
+
+      expect($('a[href="/fis/reset"]').text().trim()).toBe('Reset simulator')
+    })
+
+    test('Should ask before a reset, and not reset on asking', async () => {
+      await create('IUU.GB.2026.0000001')
+
+      const { statusCode, $ } = await get('/fis/reset')
+      const form = $('form[action="/fis/reset"]')
+
+      expect(statusCode).toBe(statusCodes.ok)
+      expect($('h1').text()).toBe('Reset the FIS simulator?')
+      expect($('main').text()).toContain(
+        "This deletes every IUU notification in the simulator. It can't be undone."
+      )
+      expect(form.attr('method')).toBe('post')
+      expect(form.find('input[name="crumb"]').val()).toBeTruthy()
+      expect(form.find('button').text().trim()).toBe('Yes, reset the simulator')
+      expect(form.find('a[href="/fis"]').text().trim()).toBe('Cancel')
+      expect(simulator.notifications.size).toBe(1)
+    })
+
+    test('Should empty the simulator once the reset is confirmed', async () => {
+      await create('IUU.GB.2026.0000001')
+
+      const { statusCode, headers } = await submit('/fis/reset')
+
+      expect(statusCode).toBe(statusCodes.found)
+      expect(headers.location).toBe('/fis?reset=true')
+      expect(simulator.notifications.size).toBe(0)
+
+      const { $ } = await get('/fis?reset=true')
+      expect($('.app-result').text()).toContain('Reset.')
+      expect($('.app-empty').text()).toContain('None yet')
+    })
+
+    test('Should refuse a reset without the crumb', async () => {
+      await create('IUU.GB.2026.0000001')
+
+      const { statusCode } = await server.inject({
+        method: 'POST',
+        url: '/fis/reset'
+      })
+
+      expect(statusCode).toBe(statusCodes.forbidden)
+      expect(simulator.notifications.size).toBe(1)
+    })
+
+    test('Should say which notification was deleted', async () => {
+      const { $ } = await get('/fis?deleted=IUU.GB.2026.0000001')
+
+      expect($('.app-result').text()).toContain(
+        'Deleted. The simulator no longer holds IUU.GB.2026.0000001.'
+      )
+    })
+
     test('Should refuse a reference that is not safe in a URL', async () => {
       const { statusCode } = await get(
         '/fis/notifications/open?reference=IUU%2F1'
@@ -154,6 +223,19 @@ describe('FIS routes', () => {
       ).toEqual(['', 'IUUOK', 'IUUNA', 'IUUNotCompliant'])
       expect(form.find('select[name="iuuOption"] option').first().text()).toBe(
         'None'
+      )
+    })
+
+    test('Should show, under the form, the message it will publish', async () => {
+      const { $ } = await get('/fis/notifications/new')
+      const form = $('form[data-module="app-iuu-notification-form"]')
+
+      expect(form.attr('data-preview')).toBe('notification-message')
+      expect(form.attr('data-created')).toBeUndefined()
+      expect($('#notification-message').is('pre')).toBe(true)
+      // Its own panel, after the form's.
+      expect($('.app-card').last().find('h2').text()).toBe(
+        'Message it publishes to BTMS'
       )
     })
 
@@ -240,11 +322,67 @@ describe('FIS routes', () => {
       expect($('.app-result').text()).toContain('Created.')
       expect($('.app-summary-list').text()).toContain('IUUNA')
       expect(form.attr('data-method')).toBe('PUT')
+      expect(form.attr('data-created')).toBe('2026-10-28T09:00:00.000Z')
       expect(form.find('input[name="reference"]').attr('type')).toBe('hidden')
       expect(form.find('button[data-next-id]')).toHaveLength(0)
       expect(form.find('select[name="iuuOption"] option[selected]').val()).toBe(
         'IUUNA'
       )
+    })
+
+    test('Should offer to delete it', async () => {
+      await create('IUU.GB.2026.0000001')
+
+      const { $ } = await get('/fis/notifications/IUU.GB.2026.0000001')
+
+      expect(
+        $('a[href="/fis/notifications/IUU.GB.2026.0000001/delete"]')
+          .text()
+          .trim()
+      ).toBe('Delete notification')
+    })
+
+    test('Should ask before a delete, and not delete on asking', async () => {
+      await create('IUU.GB.2026.0000001')
+
+      const { statusCode, $ } = await get(
+        '/fis/notifications/IUU.GB.2026.0000001/delete'
+      )
+      const form = $(
+        'form[action="/fis/notifications/IUU.GB.2026.0000001/delete"]'
+      )
+
+      expect(statusCode).toBe(statusCodes.ok)
+      expect($('h1').text()).toBe('Delete IUU.GB.2026.0000001?')
+      expect(form.find('input[name="crumb"]').val()).toBeTruthy()
+      expect(form.find('button').text().trim()).toBe('Yes, delete it')
+      expect(
+        form.find('a[href="/fis/notifications/IUU.GB.2026.0000001"]').text()
+      ).toBe('Cancel')
+      expect(simulator.notifications.size).toBe(1)
+    })
+
+    test('Should delete it once confirmed', async () => {
+      await create('IUU.GB.2026.0000001')
+      await create('IUU.GB.2026.0000002')
+
+      const { statusCode, headers } = await submit(
+        '/fis/notifications/IUU.GB.2026.0000001/delete'
+      )
+
+      expect(statusCode).toBe(statusCodes.found)
+      expect(headers.location).toBe('/fis?deleted=IUU.GB.2026.0000001')
+      expect([...simulator.notifications.keys()]).toEqual([
+        'IUU.GB.2026.0000002'
+      ])
+    })
+
+    test('Should answer 404 for a delete of a notification the simulator lacks', async () => {
+      const { statusCode } = await get(
+        '/fis/notifications/IUU.GB.2026.0000009/delete'
+      )
+
+      expect(statusCode).toBe(statusCodes.notFound)
     })
 
     test('Should say it was saved after an update', async () => {

@@ -7,3 +7,10 @@
   align-items: flex-end;
   gap: 8px;
 }
+
+// The message the form will have the simulator publish, as JSON.
+.app-message-preview pre {
+  margin: 0;
+  white-space: pre-wrap;
+  word-break: break-all;
+}

@@ -3,7 +3,8 @@ import { vi } from 'vitest'
 // A fake trade-imports-fis-simulator-api behind the global fetch mock (.vite/setup-files.js). Like the
 // real one it stores notifications by reference, refuses a reference it holds already (409, as a
 // problem), answers an update to one it doesn't hold with a bare 404, and issues the next ID from the
-// largest trailing number. It lists them newest created first, by skip and limit, and reads one.
+// largest trailing number. It lists them newest created first, by skip and limit, reads one, deletes
+// one (a bare 404 if it doesn't hold it), and empties itself on a reset.
 export function mockFisSimulator() {
   const notifications = new Map()
   const json = (body, status = 200) => ({
@@ -39,6 +40,11 @@ export function mockFisSimulator() {
     const path = url.pathname
 
     if (path === '/admin/nextId') return json({ nextId: nextId() })
+
+    if (path === '/admin/reset' && request.method === 'POST') {
+      notifications.clear()
+      return { status: 204, body: null }
+    }
 
     if (path === '/iuunotification' && request.method === 'GET') {
       const skip = Number(url.searchParams.get('skip') ?? 0)
@@ -89,6 +95,11 @@ export function mockFisSimulator() {
       stored.updated = now
       stored.iuuNotification = { reference, lastUpdated: now, iuuOption }
       return json(event('Updated', stored))
+    }
+
+    if (request.method === 'DELETE') {
+      notifications.delete(reference)
+      return { status: 204, body: null }
     }
     return json(stored)
   })

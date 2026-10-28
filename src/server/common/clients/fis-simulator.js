@@ -47,3 +47,13 @@ export function createIuuNotification(reference, { iuuOption }) {
 export function updateIuuNotification(reference, { iuuOption }) {
   return send(notification(reference), json('PUT', { iuuOption }))
 }
+
+/** Deletes a notification, 404 if there is none. Unlike a create or update, nothing is published to BTMS. */
+export function deleteIuuNotification(reference) {
+  return send(notification(reference), { method: 'DELETE' })
+}
+
+/** Empties the simulator's database. It keeps its reference counter, so the next ID carries on from the last. */
+export function resetFisSimulator() {
+  return send('/admin/reset', { method: 'POST' })
+}

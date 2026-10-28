@@ -1,10 +1,14 @@
 import {
   createNotificationApiController,
   createNotificationController,
+  deleteNotificationActionController,
+  deleteNotificationController,
   fisController,
   nextIdApiController,
   notificationController,
   openNotificationController,
+  resetActionController,
+  resetController,
   updateNotificationApiController
 } from './controller.js'
 
@@ -39,7 +43,19 @@ export const fis = {
           method: 'PUT',
           path: '/fis/api/notifications/{reference}',
           ...updateNotificationApiController
-        }
+        },
+        {
+          method: 'GET',
+          path: '/fis/notifications/{reference}/delete',
+          ...deleteNotificationController
+        },
+        {
+          method: 'POST',
+          path: '/fis/notifications/{reference}/delete',
+          ...deleteNotificationActionController
+        },
+        { method: 'GET', path: '/fis/reset', ...resetController },
+        { method: 'POST', path: '/fis/reset', ...resetActionController }
       ])
     }
   }

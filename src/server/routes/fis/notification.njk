@@ -29,9 +29,23 @@
       method: "PUT",
       reference: notification.reference,
       iuuOption: notification.iuuOption,
+      created: notification.created,
       done: "/fis/notifications/{reference}?updated=true",
       submitText: "Save changes"
     } %}
     {% include "partials/fis/notification-form.njk" %}
+  {% endcall %}
+
+  {% include "partials/fis/message-preview.njk" %}
+
+  {% call appCard({ title: { text: "Delete" } }) %}
+    <p>Removes the notification from the simulator. Nothing is published to BTMS. You'll be asked to confirm.</p>
+    <div class="app-button-row">
+      {{ appButton({
+        text: "Delete notification",
+        href: "/fis/notifications/" ~ (notification.reference | urlencode) ~ "/delete",
+        classes: "app-button--warning"
+      }) }}
+    </div>
   {% endcall %}
 {% endblock %}

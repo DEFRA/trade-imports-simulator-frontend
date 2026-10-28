@@ -6,8 +6,21 @@
     caption: "Every notification in the Fish Import Service simulator, most recently created first."
   }) }}
 
+  {% if deleted or reset %}
+    {% call appCard({ classes: "app-result" }) %}
+      {% if deleted %}
+        <p><strong>Deleted.</strong> The simulator no longer holds <span class="app-mono">{{ deleted }}</span>.</p>
+      {% else %}
+        <p><strong>Reset.</strong> The simulator's database is empty. Its next ID carries on from the last one issued.</p>
+      {% endif %}
+    {% endcall %}
+  {% endif %}
+
   <div class="app-toolbar">
-    {{ appButton({ text: "Create an IUU notification", href: "/fis/notifications/new" }) }}
+    <div class="app-toolbar__actions">
+      {{ appButton({ text: "Create an IUU notification", href: "/fis/notifications/new" }) }}
+      {{ appButton({ text: "Reset simulator", href: "/fis/reset", classes: "app-button--warning" }) }}
+    </div>
     <form class="app-toolbar__form" method="get" action="/fis/notifications/open">
       {{ appInput({ name: "reference", label: { text: "Open a notification by reference" }, spellcheck: false, classes: "app-input--reference" }) }}
       {{ appButton({ text: "Open", classes: "app-button--blue" }) }}

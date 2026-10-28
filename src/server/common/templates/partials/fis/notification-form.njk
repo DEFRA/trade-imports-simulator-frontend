@@ -2,6 +2,8 @@
   The IUU notification form. Expects `notificationForm`: { method, done, submitText, reference } and
   `iuuOptions`. Without a reference it asks for one, offering the simulator's next ID; with one it
   updates that notification. Sends the IUU option as JSON, then opens `done`, its {reference} filled.
+  It keeps the message-preview panel (partials/fis/message-preview.njk) up to date as it changes.
+  `notificationForm.created` is the stored notification's, for an update.
 -#}
 <div id="notification-error" hidden>
   {{ appErrorSummary({
@@ -12,7 +14,9 @@
 
 <form method="post" novalidate data-module="app-iuu-notification-form"
   data-action="/fis/api/notifications/{reference}" data-method="{{ notificationForm.method }}"
-  data-done="{{ notificationForm.done }}" data-error="notification-error">
+  data-done="{{ notificationForm.done }}" data-error="notification-error"
+  data-preview="notification-message"
+  {%- if notificationForm.created %} data-created="{{ notificationForm.created }}"{% endif %}>
   <div class="app-fields">
     {% if notificationForm.reference %}
       <input type="hidden" name="reference" value="{{ notificationForm.reference }}">

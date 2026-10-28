@@ -1,0 +1,8 @@
+{#-
+  The message the IUU notification form will have the simulator publish to BTMS. The form fills it
+  (its data-preview names this panel's pre) and keeps it up to date as the form changes.
+-#}
+{% call appCard({ title: { text: "Message it publishes to BTMS" }, classes: "app-message-preview" }) %}
+  <p class="app-muted">Every field, nulls included. Values the simulator sets when it sends show as &lt;set by the simulator&gt;.</p>
+  <pre id="notification-message" aria-live="polite"></pre>
+{% endcall %}

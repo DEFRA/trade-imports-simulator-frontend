@@ -1,0 +1,20 @@
+{#- Asks before something that can't be undone. Only the form's POST does it; Cancel goes back. -#}
+{% extends 'layouts/page.njk' %}
+
+{% block content %}
+  {{ appBreadcrumbs({ items: breadcrumbs }) }}
+  {{ appHeading({ text: heading }) }}
+
+  {% call appCard({ classes: "app-result app-result--rejected" }) %}
+    <p><strong>{{ warning }}</strong></p>
+    <p>{{ detail }}</p>
+
+    <form method="post" action="{{ action }}" novalidate>
+      <input type="hidden" name="crumb" value="{{ crumb }}">
+      <div class="app-button-row">
+        {{ appButton({ text: confirmText, classes: "app-button--warning" }) }}
+        {{ appButton({ text: "Cancel", href: cancel, classes: "app-button--secondary" }) }}
+      </div>
+    </form>
+  {% endcall %}
+{% endblock %}

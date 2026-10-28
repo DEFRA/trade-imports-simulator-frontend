@@ -2,9 +2,11 @@ import Joi from 'joi'
 
 import {
   createIuuNotification,
+  deleteIuuNotification,
   getIuuNotification,
   getNextId,
   listIuuNotifications,
+  resetFisSimulator,
   updateIuuNotification
 } from '#/server/common/clients/fis-simulator.js'
 import { apiRoute, relay } from '#/server/common/helpers/api-route.js'
@@ -41,15 +43,20 @@ function summarise({ id, created, updated, iuuNotification }) {
 }
 
 // Every notification in the simulator, newest created first, a page at a time. The simulator doesn't
-// say whether more follow, so each page asks for one more than it shows.
+// say whether more follow, so each page asks for one more than it shows. A delete or reset comes back
+// here, and says so.
 export const fisController = {
   options: {
     validate: {
-      query: Joi.object({ page: Joi.number().integer().min(1).default(1) })
+      query: Joi.object({
+        page: Joi.number().integer().min(1).default(1),
+        deleted: reference,
+        reset: Joi.boolean()
+      })
     }
   },
   async handler(request, h) {
-    const { page } = request.query
+    const { page, deleted, reset } = request.query
     const notifications = await listIuuNotifications({
       skip: (page - 1) * pageSize,
       limit: pageSize + 1
@@ -58,6 +65,8 @@ export const fisController = {
       pageTitle: 'IUU notifications',
       notifications: notifications.slice(0, pageSize).map(summarise),
       pastFirstPage: page > 1,
+      deleted,
+      reset,
       pagination: pagination(page, notifications.length > pageSize, {
         path: '/fis',
         landmarkLabel: 'IUU notification pages',
@@ -131,4 +140,64 @@ export const updateNotificationApiController = {
     relay(h, () =>
       updateIuuNotification(request.params.reference, request.payload)
     )
+}
+
+// A reset or delete can't be undone, so each asks on a page of its own first and acts only on that
+// page's form. Neither publishes anything to BTMS.
+export const resetController = {
+  handler: (_request, h) =>
+    h.view('fis/confirm', {
+      pageTitle: 'Reset the FIS simulator',
+      breadcrumbs: [{ text: 'FIS', href: '/fis' }, { text: 'Reset' }],
+      heading: 'Reset the FIS simulator?',
+      warning:
+        "This deletes every IUU notification in the simulator. It can't be undone.",
+      detail:
+        'Nothing is published to BTMS. The next ID carries on from the last one issued.',
+      action: '/fis/reset',
+      confirmText: 'Yes, reset the simulator',
+      cancel: '/fis'
+    })
+}
+
+export const resetActionController = {
+  async handler(_request, h) {
+    await resetFisSimulator()
+    return h.redirect('/fis?reset=true')
+  }
+}
+
+export const deleteNotificationController = {
+  options: { validate: referenceParam },
+  async handler(request, h) {
+    // Asking the simulator first answers a reference it doesn't hold with a 404, not a confirmation.
+    const { reference } = summarise(
+      await getIuuNotification(request.params.reference)
+    )
+    const path = `/fis/notifications/${encodeURIComponent(reference)}`
+    return h.view('fis/confirm', {
+      pageTitle: `Delete ${reference}`,
+      breadcrumbs: [
+        { text: 'FIS', href: '/fis' },
+        { text: reference, href: path },
+        { text: 'Delete' }
+      ],
+      heading: `Delete ${reference}?`,
+      warning:
+        "This removes the notification from the simulator. It can't be undone.",
+      detail: 'Nothing is published to BTMS.',
+      action: `${path}/delete`,
+      confirmText: 'Yes, delete it',
+      cancel: path
+    })
+  }
+}
+
+export const deleteNotificationActionController = {
+  options: { validate: referenceParam },
+  async handler(request, h) {
+    const { reference } = request.params
+    await deleteIuuNotification(reference)
+    return h.redirect(`/fis?deleted=${encodeURIComponent(reference)}`)
+  }
 }
