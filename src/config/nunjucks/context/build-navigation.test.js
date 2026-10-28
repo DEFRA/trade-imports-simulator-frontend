@@ -9,7 +9,8 @@ describe('#buildNavigation', () => {
   test('Should list every enabled simulator', () => {
     expect(buildNavigation({ path: '/' })).toEqual([
       { text: 'TRACES', href: '/traces', current: false },
-      { text: 'CDS', href: '/cds', current: false }
+      { text: 'CDS', href: '/cds', current: false },
+      { text: 'FIS', href: '/fis', current: false }
     ])
   })
 
@@ -17,7 +18,8 @@ describe('#buildNavigation', () => {
     config.set('tracesSimulator.enabled', false)
 
     expect(buildNavigation({ path: '/' })).toEqual([
-      { text: 'CDS', href: '/cds', current: false }
+      { text: 'CDS', href: '/cds', current: false },
+      { text: 'FIS', href: '/fis', current: false }
     ])
   })
 
@@ -27,6 +29,12 @@ describe('#buildNavigation', () => {
 
   test('Should mark CDS current on its pages', () => {
     expect(buildNavigation({ path: '/cds/declarations/new' })[1].current).toBe(
+      true
+    )
+  })
+
+  test('Should mark FIS current on its pages', () => {
+    expect(buildNavigation({ path: '/fis/notifications/new' })[2].current).toBe(
       true
     )
   })

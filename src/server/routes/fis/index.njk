@@ -1,0 +1,42 @@
+{% extends 'layouts/page.njk' %}
+
+{% block content %}
+  {{ appHeading({
+    text: "IUU notifications",
+    caption: "Every notification in the Fish Import Service simulator, most recently created first."
+  }) }}
+
+  <div class="app-toolbar">
+    {{ appButton({ text: "Create an IUU notification", href: "/fis/notifications/new" }) }}
+    <form class="app-toolbar__form" method="get" action="/fis/notifications/open">
+      {{ appInput({ name: "reference", label: { text: "Open a notification by reference" }, spellcheck: false, classes: "app-input--reference" }) }}
+      {{ appButton({ text: "Open", classes: "app-button--blue" }) }}
+    </form>
+  </div>
+
+  {% call appCard() %}
+    {% if notifications | length %}
+      {% set rows = [] %}
+      {% for notification in notifications %}
+        {% set _ = rows.push([
+          { html: '<a href="/fis/notifications/' ~ (notification.reference | urlencode) ~ '" class="app-mono">' ~ (notification.reference | escape) ~ '</a>' },
+          { text: notification.iuuOption or "None" },
+          { text: notification.created | formatDate("d MMM yyyy HH:mm") },
+          { text: notification.updated | formatDate("d MMM yyyy HH:mm") }
+        ]) %}
+      {% endfor %}
+      {{ appTable({
+        head: [{ text: "Reference" }, { text: "IUU option" }, { text: "Created" }, { text: "Updated" }],
+        rows: rows
+      }) }}
+    {% elif pastFirstPage %}
+      <p class="app-empty">No more notifications.</p>
+    {% else %}
+      <p class="app-empty">None yet. Notifications you create appear here.</p>
+    {% endif %}
+
+    {% if pagination %}
+      {{ appPagination(pagination) }}
+    {% endif %}
+  {% endcall %}
+{% endblock %}

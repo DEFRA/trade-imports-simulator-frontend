@@ -5,4 +5,11 @@
     text: heading,
     caption: message
   }) }}
+
+  {% if failedRequest %}
+    <p class="govuk-body">Request that failed: <code>{{ failedRequest }}</code></p>
+    {% if failedRequestBody %}
+      <pre class="govuk-body"><code>{{ failedRequestBody }}</code></pre>
+    {% endif %}
+  {% endif %}
 {% endblock %}

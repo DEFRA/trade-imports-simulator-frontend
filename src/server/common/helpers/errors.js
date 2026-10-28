@@ -41,15 +41,40 @@ export function catchAll(request, h) {
     ? `The ${response.service}: ${response.message}`
     : statusCodeMessage(statusCode)
 
+  // The call to the simulator that failed, so the page and log say what to reproduce.
+  const failedRequest = fromSimulator ? describeRequest(response.request) : {}
+
   if (statusCode >= statusCodes.internalServerError) {
     request.logger.error(response?.stack)
+    if (failedRequest.failedRequest) {
+      request.logger.error(
+        `${response.service} request failed: ${failedRequest.failedRequest}${failedRequest.failedRequestBody ? ` ${failedRequest.failedRequestBody}` : ''}`
+      )
+    }
   }
 
   return h
     .view('error/index', {
       pageTitle: errorMessage,
       heading: statusCode,
-      message: errorMessage
+      message: errorMessage,
+      ...failedRequest
     })
     .code(statusCode)
+}
+
+function describeRequest(sent) {
+  if (!sent?.url) return {}
+  return {
+    failedRequest: `${sent.method} ${sent.url}`,
+    ...(sent.body ? { failedRequestBody: prettyBody(sent.body) } : {})
+  }
+}
+
+function prettyBody(body) {
+  try {
+    return JSON.stringify(JSON.parse(body), null, 2)
+  } catch {
+    return String(body)
+  }
 }

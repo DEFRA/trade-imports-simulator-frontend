@@ -1,0 +1,9 @@
+// The reference input with its "Use next ID" button beside it, on a row of its own above the other
+// fields, lined up on the input.
+.app-reference-row {
+  display: flex;
+  flex-wrap: wrap;
+  grid-column: 1 / -1;
+  align-items: flex-end;
+  gap: 8px;
+}

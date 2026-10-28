@@ -29,8 +29,9 @@ describe('#homeController', () => {
     )
     expect($('main a[href="/traces"]').text()).toBe('TRACES')
     expect($('main a[href="/cds"]').text()).toBe('CDS')
+    expect($('main a[href="/fis"]').text()).toBe('FIS')
     expect($('main').text()).not.toContain('IPAFFS')
-    expect($('main .app-tag').text()).toBe('EnabledEnabled')
+    expect($('main .app-tag').text()).toBe('EnabledEnabledEnabled')
   })
 })
 

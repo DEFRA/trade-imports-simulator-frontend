@@ -1,0 +1,37 @@
+{% extends 'layouts/page.njk' %}
+
+{% block content %}
+  {{ appBreadcrumbs({ items: [{ text: "FIS", href: "/fis" }, { text: notification.reference }] }) }}
+
+  <div class="app-title-row">
+    <h1 class="app-mono app-ched-title">{{ notification.reference }}</h1>
+    <span class="app-muted">Updated {{ notification.updated | formatDate("d MMM yyyy HH:mm") }}</span>
+  </div>
+
+  {% if created or updated %}
+    {% call appCard({ classes: "app-result" }) %}
+      <p><strong>{{ "Created." if created else "Saved." }}</strong> The simulator published the notification to BTMS.</p>
+    {% endcall %}
+  {% endif %}
+
+  {% call appCard() %}
+    {{ appSummaryList({
+      rows: [
+        { key: { text: "IUU option" }, value: { text: notification.iuuOption } },
+        { key: { text: "Created" }, value: { text: notification.created | formatDate("d MMM yyyy HH:mm:ss") } },
+        { key: { text: "Updated" }, value: { text: notification.updated | formatDate("d MMM yyyy HH:mm:ss") } }
+      ]
+    }) }}
+  {% endcall %}
+
+  {% call appCard({ title: { text: "Update" } }) %}
+    {% set notificationForm = {
+      method: "PUT",
+      reference: notification.reference,
+      iuuOption: notification.iuuOption,
+      done: "/fis/notifications/{reference}?updated=true",
+      submitText: "Save changes"
+    } %}
+    {% include "partials/fis/notification-form.njk" %}
+  {% endcall %}
+{% endblock %}
