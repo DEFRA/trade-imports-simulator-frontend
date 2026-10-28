@@ -1,0 +1,47 @@
+{#-
+  The IUU notification form. Expects `notificationForm`: { method, done, submitText, reference } and
+  `iuuOptions`. Without a reference it asks for one, offering the simulator's next ID; with one it
+  updates that notification. Sends the IUU option as JSON, then opens `done`, its {reference} filled.
+-#}
+<div id="notification-error" hidden>
+  {{ appErrorSummary({
+    titleText: "The FIS simulator could not do that",
+    descriptionHtml: '<span data-notification-error-detail></span>'
+  }) }}
+</div>
+
+<form method="post" novalidate data-module="app-iuu-notification-form"
+  data-action="/fis/api/notifications/{reference}" data-method="{{ notificationForm.method }}"
+  data-done="{{ notificationForm.done }}" data-error="notification-error">
+  <div class="app-fields">
+    {% if notificationForm.reference %}
+      <input type="hidden" name="reference" value="{{ notificationForm.reference }}">
+    {% else %}
+      <div class="app-reference-row">
+        {{ appInput({
+          name: "reference",
+          label: { text: "IUU reference" },
+          hint: { text: "For example IUU.GB.2026.0000001" },
+          spellcheck: false,
+          autocomplete: "off",
+          classes: "app-input--reference"
+        }) }}
+        {{ appButton({
+          text: "Use next ID",
+          type: "button",
+          classes: "app-button--secondary",
+          attributes: { "data-next-id": "/fis/api/next-id" }
+        }) }}
+      </div>
+    {% endif %}
+    {{ appSelect({
+      name: "iuuOption",
+      label: { text: "IUU option" },
+      items: iuuOptions,
+      value: notificationForm.iuuOption
+    }) }}
+  </div>
+  <div class="app-button-row">
+    {{ appButton({ text: notificationForm.submitText }) }}
+  </div>
+</form>

@@ -37,6 +37,34 @@ describe('#jsonApi', () => {
     expect(error.service).toBe('CDS simulator')
   })
 
+  test('Should keep the request that failed', async () => {
+    fetch.mockResponse({ status: 405, body: '' })
+
+    const error = await send('/x/1', {
+      method: 'POST',
+      body: '{"a":1}'
+    }).catch((e) => e)
+
+    expect(error.message).toBe('The simulator returned 405')
+    expect(error.request).toEqual({
+      method: 'POST',
+      url: 'http://localhost:5003/x/1',
+      body: '{"a":1}'
+    })
+  })
+
+  test('Should name a GET when no method is given', async () => {
+    fetch.mockResponse({ status: 405, body: '' })
+
+    const error = await send('/x/1').catch((e) => e)
+
+    expect(error.request).toEqual({
+      method: 'GET',
+      url: 'http://localhost:5003/x/1',
+      body: undefined
+    })
+  })
+
   test('Should say which fields a validation problem is about', async () => {
     answer(400, {
       title: 'One or more validation errors occurred.',

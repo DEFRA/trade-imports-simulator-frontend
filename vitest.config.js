@@ -11,7 +11,8 @@ export default defineConfig({
     env: {
       TZ: 'UTC',
       TRACES_SIMULATOR_ENABLED: 'true',
-      CDS_SIMULATOR_ENABLED: 'true'
+      CDS_SIMULATOR_ENABLED: 'true',
+      FIS_SIMULATOR_ENABLED: 'true'
     },
     coverage: {
       provider: 'v8',

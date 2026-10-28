@@ -3,6 +3,7 @@ import { vi } from 'vitest'
 import { catchAll } from './errors.js'
 import { createServer } from '../../server.js'
 import { statusCodes } from '../constants/status-codes.js'
+import { ControlApiError } from '../clients/json-api.js'
 
 describe('#errors', () => {
   let server
@@ -122,5 +123,36 @@ describe('#catchAll', () => {
     expect(mockToolkitCode).toHaveBeenCalledWith(
       statusCodes.internalServerError
     )
+  })
+
+  test('Should show and log the simulator request that failed', () => {
+    const error = Object.assign(
+      new ControlApiError(405, undefined, 'FIS simulator', {
+        method: 'POST',
+        url: 'http://localhost:8086/iuunotification/IUU.GB.2026.0000001',
+        body: '{"iuuOption":"IUUOK"}'
+      }),
+      { isBoom: true }
+    )
+
+    catchAll(
+      { response: error, logger: { error: mockErrorLogger } },
+      mockToolkit
+    )
+
+    expect(mockToolkitView).toHaveBeenCalledWith(errorPage, {
+      pageTitle: 'The FIS simulator: The simulator returned 405',
+      heading: statusCodes.badGateway,
+      message: 'The FIS simulator: The simulator returned 405',
+      failedRequest:
+        'POST http://localhost:8086/iuunotification/IUU.GB.2026.0000001',
+      failedRequestBody: '{\n  "iuuOption": "IUUOK"\n}'
+    })
+    expect(mockErrorLogger).toHaveBeenCalledWith(
+      expect.stringContaining(
+        'FIS simulator request failed: POST http://localhost:8086/iuunotification/IUU.GB.2026.0000001'
+      )
+    )
+    expect(mockToolkitCode).toHaveBeenCalledWith(statusCodes.badGateway)
   })
 })

@@ -1,0 +1,18 @@
+{% extends 'layouts/page.njk' %}
+
+{% block content %}
+  {{ appBreadcrumbs({ items: [{ text: "FIS", href: "/fis" }, { text: "Create an IUU notification" }] }) }}
+  {{ appHeading({
+    text: "Create an IUU notification",
+    caption: "The outcome of the Fish Import Service's IUU check. The simulator stores it and publishes it to BTMS."
+  }) }}
+
+  {% call appCard() %}
+    {% set notificationForm = {
+      method: "POST",
+      done: "/fis/notifications/{reference}?created=true",
+      submitText: "Create notification"
+    } %}
+    {% include "partials/fis/notification-form.njk" %}
+  {% endcall %}
+{% endblock %}

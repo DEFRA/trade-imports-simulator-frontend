@@ -141,6 +141,20 @@ export const config = convict({
       env: 'CDS_SIMULATOR_SECRET'
     }
   },
+  fisSimulator: {
+    enabled: {
+      doc: 'Serve the Fish Import Service pages.',
+      format: Boolean,
+      default: false,
+      env: 'FIS_SIMULATOR_ENABLED'
+    },
+    baseUrl: {
+      doc: "trade-imports-fis-simulator-api, which stands in for the Fish Import Service. 8085 is its launch profile's port, as it is the TRACES stub's, so locally run one or set this.",
+      format: String,
+      default: 'http://localhost:8085',
+      env: 'FIS_SIMULATOR_URL'
+    }
+  },
   tracesPoc: {
     baseUrl: {
       doc: 'trade-traces-poc, whose XSLT views this app proxies under /poc. 8090 is its local port.',

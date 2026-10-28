@@ -1,13 +1,15 @@
 // What the simulators' JSON APIs share: a failure becomes a ControlApiError carrying the simulator's
 // own problem, so a page can show its message, and `service` names the simulator for the error page.
+// `request` is what was sent ({ method, url, body }), so the error page can say which call failed.
 export class ControlApiError extends Error {
-  constructor(status, problem, service) {
+  constructor(status, problem, service, request) {
     super(
       problem?.detail ?? problem?.title ?? `The simulator returned ${status}`
     )
     this.status = status
     this.problem = problem
     this.service = service
+    this.request = request
   }
 }
 
@@ -27,6 +29,11 @@ export function jsonApi({ service, setting, baseUrl, headers = () => ({}) }) {
   return async function send(path, options) {
     const base = baseUrl()
     const url = `${base}${path}`
+    const request = {
+      method: options?.method ?? 'GET',
+      url,
+      body: options?.body
+    }
     let response
     try {
       response = await fetch(url, {
@@ -43,7 +50,8 @@ export function jsonApi({ service, setting, baseUrl, headers = () => ({}) }) {
         {
           detail: `Could not reach the simulator at ${base}: ${error.cause?.code ?? error.message}`
         },
-        service
+        service,
+        request
       )
     }
     const body = await response.text()
@@ -57,11 +65,17 @@ export function jsonApi({ service, setting, baseUrl, headers = () => ({}) }) {
         {
           detail: `${url} answered ${response.status} with ${response.headers.get('content-type') ?? 'no content type'}, not the ${service}'s JSON. Is ${setting} (${base}) right?`
         },
-        service
+        service,
+        request
       )
     }
     if (!response.ok) {
-      throw new ControlApiError(response.status, problemFrom(json), service)
+      throw new ControlApiError(
+        response.status,
+        problemFrom(json),
+        service,
+        request
+      )
     }
     return json
   }

@@ -19,6 +19,14 @@ export const simulators = [
       'Create and amend customs declarations, sent to BTMS through the CDS simulator.',
     paths: ['/cds'],
     enabledKey: 'cdsSimulator.enabled'
+  },
+  {
+    text: 'FIS',
+    href: '/fis',
+    description:
+      'Create and update IUU notifications in the Fish Import Service simulator.',
+    paths: ['/fis'],
+    enabledKey: 'fisSimulator.enabled'
   }
 ]
 

@@ -3,6 +3,7 @@ import inert from '@hapi/inert'
 import { home } from '../routes/home/index.js'
 import { traces } from '../routes/traces/index.js'
 import { cds } from '../routes/cds/index.js'
+import { fis } from '../routes/fis/index.js'
 import { poc } from '../routes/poc/index.js'
 import { health } from '../routes/health/index.js'
 import { serveStaticFiles } from './serve-static-files.js'
@@ -10,7 +11,7 @@ import { config } from '#/config/config.js'
 import { statusCodes } from '#/server/common/constants/status-codes.js'
 import { isEnabled, simulators } from '#/server/common/helpers/simulators.js'
 
-const simulatorPlugins = { TRACES: [traces, poc], CDS: [cds] }
+const simulatorPlugins = { TRACES: [traces, poc], CDS: [cds], FIS: [fis] }
 
 export const router = {
   plugin: {
