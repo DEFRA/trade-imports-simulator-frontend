@@ -173,11 +173,18 @@ docker run -p 3000:3000 trade-imports-simulator-frontend
 
 A local environment with:
 
-- Floci (replacing Localstack) for AWS services (S3, SQS)
+- Floci (replacing Localstack) for AWS services (S3, SNS, SQS)
 - Redis
 - MongoDB
+- [trade-imports-fis-simulator-api](https://github.com/DEFRA/trade-imports-fis-simulator-api) on port 8085, with
+  the FIS pages pointed at it
 - This service.
 - A commented out backend example.
+
+The FIS simulator runs from its published image, `defradigital/trade-imports-fis-simulator-api`; set
+`TRADE_IMPORTS_FIS_SIMULATOR_API` to a tag to run a version other than `latest`. Floci's start-up script creates the
+`trade_imports_iuunotification_sim_upserted` topic it publishes to, with a queue subscribed so messages can be read
+back.
 
 ```bash
 docker compose up --build -d
