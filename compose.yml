@@ -10,6 +10,13 @@ services:
       FLOCI_DEFAULT_REGION: eu-west-2
     volumes:
       - ./compose/floci/start.d:/etc/floci/init/start.d:ro
+    healthcheck:
+      # Healthy once start.d has subscribed the FIS simulator's queue to its topic.
+      test: aws --endpoint-url=http://localhost:4566 sns list-subscriptions | grep -q trade_imports_iuunotification_sim_upserted_queue
+      interval: 5s
+      timeout: 5s
+      start_period: 5s
+      retries: 10
     networks:
       - cdp-tenant
 
@@ -38,7 +45,30 @@ services:
 
   ################################################################################
 
-  your-frontend:
+  # trade-imports-fis-simulator-api, as CDP publishes it. Set TRADE_IMPORTS_FIS_SIMULATOR_API to run another
+  # version. It stores notifications in mongodb and publishes them to floci's SNS.
+  fis-simulator-api:
+    image: defradigital/trade-imports-fis-simulator-api:${TRADE_IMPORTS_FIS_SIMULATOR_API:-latest}
+    ports:
+      - '8085:8085'
+    depends_on:
+      mongodb:
+        condition: service_healthy
+      floci:
+        condition: service_healthy
+    env_file:
+      - 'compose/aws.env'
+      - 'compose/fis-simulator-api.env'
+    healthcheck:
+      test: ['CMD', 'curl', '-f', 'http://localhost:8085/health']
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 5s
+    networks:
+      - cdp-tenant
+
+  simulator-frontend:
     build: ./
     ports:
       - '3000:3000'
@@ -50,6 +80,8 @@ services:
         condition: service_healthy
       redis:
         condition: service_started
+      fis-simulator-api:
+        condition: service_healthy
     env_file:
       - 'compose/aws.env'
     environment:
@@ -60,31 +92,10 @@ services:
       SESSION_COOKIE_SECURE: false
       USE_SINGLE_INSTANCE_CACHE: true
       REDIS_TLS: false
+      FIS_SIMULATOR_ENABLED: true
+      FIS_SIMULATOR_URL: http://fis-simulator-api:8085
     networks:
       - cdp-tenant
-
-  # your-backend:
-  #   image: defradigital/your-backend:${YOUR_BACKEND_VERSION:-latest}
-  #   ports:
-  #     - '3555:3555'
-  #   links:
-  #     - 'foci:floci'
-  #     - 'mongodb:mongodb'
-  #   depends_on:
-  #     floci:
-  #       condition: service_healthy
-  #     mongodb:
-  #       condition: service_started
-  #   env_file:
-  #     - 'compose/aws.env'
-  #   environment:
-  #     PORT: 3001
-  #     NODE_ENV: development
-  #     MONGO_URI: mongodb://mongodb:27017/
-  #   networks:
-  #     - cdp-tenant
-
-################################################################################
 
 volumes:
   mongodb-data:
