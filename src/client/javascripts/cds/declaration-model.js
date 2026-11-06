@@ -36,10 +36,6 @@ export function toLocalInput(epoch) {
   return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`
 }
 
-function fromLocalInput(value) {
-  return value ? new Date(value).getTime() : undefined
-}
-
 const text = (value) =>
   value === undefined || value === null ? '' : String(value)
 

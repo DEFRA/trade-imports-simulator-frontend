@@ -114,13 +114,6 @@ export const cdsController = {
   }
 }
 
-// A new declaration's arrival, unless its start says otherwise: this time tomorrow, to the minute.
-function tomorrow() {
-  const date = new Date(Date.now() + 24 * 60 * 60 * 1000)
-  date.setSeconds(0, 0)
-  return date.getTime()
-}
-
 // A new declaration starts blank or from a scenario the simulator holds. Without a start the page
 // asks for one; with one it's the form, filled from that start.
 export const createDeclarationController = {
