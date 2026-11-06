@@ -148,7 +148,6 @@ export const createDeclarationController = {
     if (!chosen) throw Boom.notFound(`There is no scenario ${start}`)
     const model = structuredClone(chosen.model)
     model.header ??= {}
-    model.header.arrivalDateTime ??= tomorrow()
 
     return h.view('cds/create', {
       pageTitle: 'Create a declaration',

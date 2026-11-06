@@ -7,7 +7,6 @@
 
 export const headerFields = [
   'declarationType',
-  'arrivalDateTime',
   'declarant',
   'dispatchCountryCode',
   'goodsLocationCode'
@@ -50,7 +49,6 @@ export function fromModel(model) {
     headerFields.map((name) => [name, text(header[name])])
   )
   values.declarant = text(header.declarantId)
-  values.arrivalDateTime = toLocalInput(header.arrivalDateTime)
   values.items = (model?.items ?? []).map((item) => ({
     ...Object.fromEntries(itemFields.map((name) => [name, text(item[name])])),
     checks: (item.checks ?? []).map((check) =>
@@ -75,7 +73,6 @@ export function toModel(base, values) {
   set(model.header, 'declarantId', values.declarant)
   set(model.header, 'declarantName', values.declarant)
   set(model.header, 'submitterTURN', values.declarant.replace('999', '888'))
-  set(model.header, 'arrivalDateTime', fromLocalInput(values.arrivalDateTime))
 
   const baseItems = model.items ?? []
   model.items = values.items.map((item, index) =>
