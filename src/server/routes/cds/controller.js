@@ -42,7 +42,6 @@ const mrn = Joi.string()
   .pattern(/^\d{2}[A-Z]{2}[A-Z0-9]{14}$/)
 
 const codes = (list) => list.map((code) => ({ value: code, text: code }))
-const joined = (list) => list.join(' + ') || 'no document'
 
 // Made-up EORIs, GB999000000001 to GB999000001000, for the declarant input to suggest.
 const declarants = Array.from(

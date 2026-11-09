@@ -26,13 +26,29 @@ export const combinations = [
   { label: 'CHED-A', checks: ['H221'], documents: ['C640'] },
   { label: 'CHED-D', checks: ['H223'], documents: ['C678'] },
   { label: 'CHED-P', checks: ['H222'], documents: ['N853'] },
-  { label: 'CHED-P (With IUU)', checks: ['H222', 'H224'], documents: ['N853', 'C673'] },
+  {
+    label: 'CHED-P (With IUU)',
+    checks: ['H222', 'H224'],
+    documents: ['N853', 'C673']
+  },
   { label: 'CHED-PP (PHSI Only)', checks: ['H219'], documents: ['C085'] },
   { label: 'CHED-PP (GMS 1% Check)', checks: ['H220'], documents: [] },
   { label: 'CHED-PP (HMI-SMS Only)', checks: ['H218'], documents: ['C085'] },
-  { label: 'CHED-PP (PHSI & HMI-SMS)', checks: ['H219', 'H218'], documents: ['C085', 'C085'] },
-  { label: 'CHED-PP (PHSI & HMI-GMS)', checks: ['H219', 'H220'], documents: ['C085', 'C085'] },
-  { label: 'CHED-PP (PHSI & HMI-SMS & HMI-GMS)', checks: ['H219', 'H218', 'H220'], documents: ['C085', 'C085', 'C085'] },
+  {
+    label: 'CHED-PP (PHSI & HMI-SMS)',
+    checks: ['H219', 'H218'],
+    documents: ['C085', 'C085']
+  },
+  {
+    label: 'CHED-PP (PHSI & HMI-GMS)',
+    checks: ['H219', 'H220'],
+    documents: ['C085', 'C085']
+  },
+  {
+    label: 'CHED-PP (PHSI & HMI-SMS & HMI-GMS)',
+    checks: ['H219', 'H218', 'H220'],
+    documents: ['C085', 'C085', 'C085']
+  }
 ]
 
 // Document statuses, commonest first. AE, JE and AG cover 98% of documents.

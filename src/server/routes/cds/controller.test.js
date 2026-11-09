@@ -233,7 +233,10 @@ describe('CDS routes', () => {
     {
       combinationIndex: 3,
       combinationLabel: 'CHED-P (With IUU)',
-      expectedCombination: { checks: ['H222', 'H224'], documents: ['N853', 'C673'] }
+      expectedCombination: {
+        checks: ['H222', 'H224'],
+        documents: ['N853', 'C673']
+      }
     },
     {
       combinationIndex: 4,
@@ -253,37 +256,49 @@ describe('CDS routes', () => {
     {
       combinationIndex: 7,
       combinationLabel: 'CHED-PP (PHSI & HMI-SMS)',
-      expectedCombination: { checks: ['H219', 'H218'], documents: ['C085', 'C085'] }
+      expectedCombination: {
+        checks: ['H219', 'H218'],
+        documents: ['C085', 'C085']
+      }
     },
     {
       combinationIndex: 8,
       combinationLabel: 'CHED-PP (PHSI & HMI-GMS)',
-      expectedCombination: { checks: ['H219', 'H220'], documents: ['C085', 'C085'] }
+      expectedCombination: {
+        checks: ['H219', 'H220'],
+        documents: ['C085', 'C085']
+      }
     },
     {
       combinationIndex: 9,
       combinationLabel: 'CHED-PP (PHSI & HMI-SMS & HMI-GMS)',
-      expectedCombination: { checks: ['H219', 'H218', 'H220'], documents: ['C085', 'C085', 'C085'] }
+      expectedCombination: {
+        checks: ['H219', 'H218', 'H220'],
+        documents: ['C085', 'C085', 'C085']
+      }
     }
-  ])('Should offer check codes, and the combinations real items carried', async ({
-    combinationIndex,
-    combinationLabel,
-    expectedCombination
-  }) => {
-    const { $ } = await get('/cds/declarations/new?start=blank')
-    const checks = load($('template[data-cds-check]').html())
-    const item = load($('template[data-cds-item]').html())
-    const lookups = JSON.parse($('#create-declaration-lookups').text())
+  ])(
+    'Should offer check codes, and the combinations real items carried',
+    async ({ combinationIndex, combinationLabel, expectedCombination }) => {
+      const { $ } = await get('/cds/declarations/new?start=blank')
+      const checks = load($('template[data-cds-check]').html())
+      const item = load($('template[data-cds-item]').html())
+      const lookups = JSON.parse($('#create-declaration-lookups').text())
 
-    expect(checks('select[name="checkCode"] option[value="H222"]').text()).toBe(
-      'H222 – PHA'
-    )
-    expect(item(`select[name="combination"] option[value="${combinationIndex}"]`).text()).toBe(
-      combinationLabel
-    )
-    expect(lookups.departments.H218).toBe('HMI')
-    expect(lookups.combinations[combinationIndex]).toMatchObject(expectedCombination)
-  })
+      expect(
+        checks('select[name="checkCode"] option[value="H222"]').text()
+      ).toBe('H222 – PHA')
+      expect(
+        item(
+          `select[name="combination"] option[value="${combinationIndex}"]`
+        ).text()
+      ).toBe(combinationLabel)
+      expect(lookups.departments.H218).toBe('HMI')
+      expect(lookups.combinations[combinationIndex]).toMatchObject(
+        expectedCombination
+      )
+    }
+  )
 
   test('Should relay a new clearance request and the MRN the simulator issued', async () => {
     const response = await send('POST', '/cds/api/clearance-requests', request)
