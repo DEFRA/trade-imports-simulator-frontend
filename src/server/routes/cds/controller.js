@@ -70,9 +70,9 @@ const formItems = {
   })),
   combinations: [
     { value: '', text: 'Set checks and documents from a common combination' },
-    ...combinations.map(({ checks, documents }, index) => ({
+    ...combinations.map(({ label, checks, documents }, index) => ({
       value: String(index),
-      text: `${joined(checks)} → ${joined(documents)}`
+      text: `${label}`
     }))
   ],
   lookups: {
