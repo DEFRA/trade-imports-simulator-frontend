@@ -20,8 +20,9 @@ export const checkCodes = [
   { code: 'H236', department: 'PHA' }
 ]
 
-// An item's checks and its documents' codes as they came together, commonest first, down to those
-// seen 30 times. H220 alone, with no document, is real: an HMI check with nothing to match.
+// An item's checks and its documents' codes as they came together, showing
+// the most sensible options in label order.
+// H220 alone, with no document, is real: an HMI check with nothing to match.
 export const combinations = [
   { label: 'CHED-A', checks: ['H221'], documents: ['C640'] },
   { label: 'CHED-D', checks: ['H223'], documents: ['C678'] },
