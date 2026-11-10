@@ -4,20 +4,13 @@
 
 // Each check code belongs to one department. BTMS acts on H218 to H224; the rest it has no mapping for.
 export const checkCodes = [
-  { code: 'H218', department: 'HMI' },
-  { code: 'H219', department: 'PHSI' },
-  { code: 'H220', department: 'HMI' },
-  { code: 'H221', department: 'AHVLA' },
-  { code: 'H222', department: 'PHA' },
-  { code: 'H223', department: 'PHA' },
-  { code: 'H224', department: 'PHA' },
-  { code: 'H230', department: 'HMI' },
-  { code: 'H231', department: 'HMI' },
-  { code: 'H232', department: 'PHSI' },
-  { code: 'H233', department: 'AHVLA' },
-  { code: 'H234', department: 'PHA' },
-  { code: 'H235', department: 'PHA' },
-  { code: 'H236', department: 'PHA' }
+  { label: 'H218 - CHED-PP (HMI-SMS)', code: 'H218', department: 'HMI' },
+  { label: 'H219 - CHED-PP (PHSI)', code: 'H219', department: 'PHSI' },
+  { label: 'H220 - CHED-PP (HMI-GMS)', code: 'H220', department: 'HMI' },
+  { label: 'H221 - CHED-A', code: 'H221', department: 'AHVLA' },
+  { label: 'H222 - CHED-P', code: 'H222', department: 'PHA' },
+  { label: 'H223 - CHED-D', code: 'H223', department: 'PHA' },
+  { label: 'H224 - IUU', code: 'H224', department: 'PHA' }
 ]
 
 // An item's checks and its documents' codes as they came together, showing

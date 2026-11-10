@@ -287,7 +287,7 @@ describe('CDS routes', () => {
 
       expect(
         checks('select[name="checkCode"] option[value="H222"]').text()
-      ).toBe('H222 – PHA')
+      ).toBe('H222 - CHED-P')
       expect(
         item(
           `select[name="combination"] option[value="${combinationIndex}"]`
@@ -297,6 +297,42 @@ describe('CDS routes', () => {
       expect(lookups.combinations[combinationIndex]).toMatchObject(
         expectedCombination
       )
+    }
+  )
+
+  test.each([
+    {
+      checkCode: 'H218',
+      department: 'HMI',
+      expectedLabel: 'H218 - CHED-PP (HMI-SMS)'
+    },
+    {
+      checkCode: 'H219',
+      department: 'PHSI',
+      expectedLabel: 'H219 - CHED-PP (PHSI)'
+    },
+    {
+      checkCode: 'H220',
+      department: 'HMI',
+      expectedLabel: 'H220 - CHED-PP (HMI-GMS)'
+    },
+    { checkCode: 'H221', department: 'AHVLA', expectedLabel: 'H221 - CHED-A' },
+    { checkCode: 'H222', department: 'PHA', expectedLabel: 'H222 - CHED-P' },
+    { checkCode: 'H223', department: 'PHA', expectedLabel: 'H223 - CHED-D' },
+    { checkCode: 'H224', department: 'PHA', expectedLabel: 'H224 - IUU' }
+  ])(
+    'Should contain Check Code "$checkCode" with option label "$expectedLabel" with Department lookup value "$department"',
+    async ({ checkCode, department, expectedLabel }) => {
+      const { $ } = await get('/cds/declarations/new?start=blank')
+      const checks = load($('template[data-cds-check]').html())
+      const lookups = JSON.parse($('#create-declaration-lookups').text())
+
+      const checkCodeOption = checks(
+        `select[name="checkCode"] option[value="${checkCode}"]`
+      )
+      expect(checkCodeOption.text()).toBe(expectedLabel)
+
+      expect(lookups.departments[checkCode]).toBe(department)
     }
   )
 

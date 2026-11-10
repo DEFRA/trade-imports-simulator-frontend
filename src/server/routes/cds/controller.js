@@ -63,9 +63,9 @@ const formItems = {
   })),
   documentStatuses: codes(documentStatuses),
   documentControls: codes(documentControls),
-  checkCodes: checkCodes.map(({ code, department }) => ({
+  checkCodes: checkCodes.map(({ label, code, department }) => ({
     value: code,
-    text: `${code} – ${department}`
+    text: `${label}`
   })),
   combinations: [
     { value: '', text: 'Set checks and documents from a common combination' },
