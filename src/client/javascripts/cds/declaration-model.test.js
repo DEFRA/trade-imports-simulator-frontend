@@ -52,7 +52,7 @@ describe('#declarationModel', () => {
     const values = fromModel(stored)
 
     expect(values.declarationType).toBe('S')
-    expect(values.arrivalDateTime).toBe('2026-10-22T09:30')
+    expect(values.arrivalDateTime).toBeUndefined()
     expect(values.goodsLocationCode).toBe('')
     expect(values.items[0]).toMatchObject({
       taricCommodityCode: '0201100021',

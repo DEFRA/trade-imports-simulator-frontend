@@ -32,7 +32,6 @@
   <h3>Declaration</h3>
   <div class="app-fields">
     {{ appSelect({ name: "declarationType", label: { text: "Declaration type" }, items: items.declarationTypes }) }}
-    {{ appInput({ name: "arrivalDateTime", type: "datetime-local", label: { text: "Arrival" } }) }}
     {{ appInput({ name: "declarant", label: { text: "Declarant" }, spellcheck: false, attributes: { list: declarationForm.id ~ "-declarants" } }) }}
     <datalist id="{{ declarationForm.id }}-declarants">
       {%- for declarant in items.declarants %}<option value="{{ declarant }}">{% endfor -%}

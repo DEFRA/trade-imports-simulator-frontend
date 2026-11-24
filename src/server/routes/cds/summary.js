@@ -46,7 +46,6 @@ export async function summariseRequest(request) {
     rows: [
       ['Declaration UCR', text(header.declarationUCR)],
       ['Declaration type', named('declarationTypes', header.declarationType)],
-      ['Arrival', time(header.arrivalDateTime)],
       ['Declarant', text(header.declarantId)],
       ['Submitter TURN', text(header.submitterTURN)],
       ['Dispatch country', named('countries', header.dispatchCountryCode)],

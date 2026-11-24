@@ -135,7 +135,7 @@ describe('CDS routes', () => {
       dispatchCountryCode: 'FR',
       goodsLocationCode: 'LGPLGPLGP'
     })
-    expect(model.header.arrivalDateTime).toBeGreaterThan(Date.now())
+    expect(model.header.arrivalDateTime).toBeUndefined()
     expect($('.app-breadcrumbs').text()).toContain('Blank')
     expect(
       $('[data-module="app-cds-declaration-form"]').attr('data-scenario-action')
