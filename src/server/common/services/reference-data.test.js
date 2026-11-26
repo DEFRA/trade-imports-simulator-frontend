@@ -1,4 +1,4 @@
-import { mockSimulator } from '#/test-helpers/simulator.js'
+import { lookups, mockSimulator } from '#/test-helpers/simulator.js'
 
 describe('#getReferenceData', () => {
   let getReferenceData
@@ -14,9 +14,7 @@ describe('#getReferenceData', () => {
 
     const lists = await getReferenceData()
 
-    expect(lists.cnCodes).toEqual([
-      { code: '0101', name: 'Live horses, asses, mules and hinnies' }
-    ])
+    expect(lists.cnCodes).toEqual(lookups.cn_code)
     expect(lists.borderControlPosts[0].code).toBe('GBBEL')
     expect(fetch).toHaveBeenCalledWith(
       'http://localhost:8085/control/lookups/cn_code',

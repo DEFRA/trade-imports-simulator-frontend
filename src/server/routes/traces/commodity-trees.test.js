@@ -107,7 +107,22 @@ describe('GET /traces/api/commodity-trees/{chedType}', () => {
 
     expect(statusCode).toBe(statusCodes.ok)
     expect(result).toEqual([
-      ['0101', 'Live horses, asses, mules and hinnies', 1, []]
+      ['0101', 'Live horses, asses, mules and hinnies', 1, []],
+      ['0401', 'Milk and cream', 1, []]
+    ])
+  })
+
+  test('Should offer only the seeded CN codes tagged for the type, or untagged', async () => {
+    mockSimulator()
+
+    expect((await get('A')).result.map(([code]) => code)).toEqual(['0101'])
+    expect((await get('PP')).result.map(([code]) => code)).toEqual([
+      '0101',
+      '0709601000'
+    ])
+    expect((await get('D')).result.map(([code]) => code)).toEqual([
+      '0101',
+      '0709601000'
     ])
   })
 
