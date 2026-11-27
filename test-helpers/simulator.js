@@ -32,7 +32,12 @@ export const lookups = {
     { code: 'AF', name: 'Afghanistan' },
     { code: 'XI', name: 'United Kingdom (Northern Ireland)' }
   ],
-  cn_code: [{ code: '0101', name: 'Live horses, asses, mules and hinnies' }]
+  // Untagged, as a code is offered for every CHED type; tagged ones only for their types.
+  cn_code: [
+    { code: '0101', name: 'Live horses, asses, mules and hinnies' },
+    { code: '0401', name: 'Milk and cream', chedTypes: ['P'] },
+    { code: '0709601000', name: 'Sweet peppers', chedTypes: ['PP', 'D'] }
+  ]
 }
 
 // A fake stub behind the global fetch mock (.vite/setup-files.js): it serves the lookups above, and

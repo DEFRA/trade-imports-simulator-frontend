@@ -25,9 +25,12 @@ async function load(chedType) {
     return trim((await getCommodityTree(chedType)).nodes)
   } catch (error) {
     if (!(error instanceof ControlApiError) || error.status !== 404) throw error
-    // No tree for the type: the seeded CN codes, flat, so the picker always gets one shape.
+    // No tree for the type: the seeded CN codes tagged for it (or untagged), flat, so the picker
+    // always gets one shape.
     const { cnCodes } = await getReferenceData()
-    return cnCodes.map(({ code, name }) => [code, name, 1, []])
+    return cnCodes
+      .filter(({ chedTypes }) => !chedTypes || chedTypes.includes(chedType))
+      .map(({ code, name }) => [code, name, 1, []])
   }
 }
 
